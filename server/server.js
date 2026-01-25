@@ -7,56 +7,65 @@ import userRouter from "./routes/Userroutes.js";
 import messageRouter from "./routes/messageRoutes.js";
 import { Server } from "socket.io";
 
-// create express app and http server
-
 const app = express();
-const server = http.createServer(app)
+const server = http.createServer(app);
 
-//initialize socket.io server
+// 🔥🔥🔥 CORS FOR EXPRESS (THIS WAS MISSING)
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://realtime-chat-app-rho-flax.vercel.app"  // 👈 your frontend URL
+  ],
+  credentials: true,
+}));
 
-export const io = new Server(server,{
-    cors:{origin: "*"}
-})
-
-export const userSocketMap = {};//{userid and socketid}
-
-//socket.io connectio handler
-
-io.on("connection",(Socket)=>{
-    const userId = Socket.handshake.query.userId;
-    console.log("user connected",userId);
-    if(userId) userSocketMap[userId] = Socket.id;
-    // emit online users to all connected clients
-
-    io.emit("getOnlineUsers",Object.keys(userSocketMap));
-
-    Socket.on("disconnect",()=>{
-       console.log("User Disconnected",userId) ;
-       delete userSocketMap[userId];
-       io.emit("getOnlineUsers",Object.keys(userSocketMap))
-    })
-})
-// Middleware
+// Body limits
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
+// 🔥 Socket.IO with same CORS
+export const io = new Server(server, {
+  cors: {
+    origin: [
+      "http://localhost:5173",
+      "https://realtime-chat-app-rho-flax.vercel.app"
+    ],
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
+});
 
+export const userSocketMap = {};
 
-// Route Setup
-app.use("/api/status", (req,res)=> res.send("Server is Live"));
-app.use("/api/auth",userRouter)
-app.use("/api/messages",messageRouter)
+// Socket handler
+io.on("connection", (socket) => {
+  const userId = socket.handshake.query.userId;
+  console.log("User connected:", userId);
 
+  if (userId) userSocketMap[userId] = socket.id;
 
- //connect to mongodb
+  io.emit("getOnlineUsers", Object.keys(userSocketMap));
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", userId);
+    delete userSocketMap[userId];
+    io.emit("getOnlineUsers", Object.keys(userSocketMap));
+  });
+});
+
+// Routes
+app.get("/api/status", (req, res) => res.send("Server is Live"));
+app.use("/api/auth", userRouter);
+app.use("/api/messages", messageRouter);
+
+// Connect DB
 await connectDB();
 
-
-
-if(process.env.NODE_ENV !=="production"){
- const PORT = process.env.PORT || 5000;
- server.listen(PORT ,()=> console.log("Server is running on PORT:" + PORT))
+// Local dev
+if (process.env.NODE_ENV !== "production") {
+  const PORT = process.env.PORT || 5000;
+  server.listen(PORT, () => console.log("Server running on PORT:", PORT));
 }
 
-// export server for vercel
+// Export for Vercel
 export default server;
