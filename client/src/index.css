@@ -1,5 +1,35 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
 @import "tailwindcss";
-*{
-   font-family: "Outfit",sans-serif;
+
+* {
+  font-family: "Outfit", sans-serif;
+  box-sizing: border-box;
+}
+
+/* 🔥 FULL SCROLL CONTROL */
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* 🔥 REMOVE BROWSER SCROLLBAR SPACE */
+body {
+  overscroll-behavior: none;
+}
+
+/* 🔥 HIDE SCROLLBAR VISUALLY (BUT KEEP FUNCTIONAL IN CHAT) */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
 }

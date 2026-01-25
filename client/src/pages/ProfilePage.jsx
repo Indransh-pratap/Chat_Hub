@@ -1,28 +1,54 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import assets from "../assets/assets";
+import { AuthContext } from "../../context/AuthContext";
 
 const ProfilePage = () => {
+  const { authUser, updateProfile } = useContext(AuthContext);   // FIX 1
 
-  const [selectedImg, setselectedImg] = useState(null);
   const navigate = useNavigate();
-  const [name, setName] = useState("thakur sahab");
-  const [bio, setBio] = useState("Ram Ram thakur sahab");
+
+  const [name, setName] = useState(authUser.fullName);
+  const [bio, setBio] = useState(authUser.bio);
+  const [selectedImg, setselectedImg] = useState(null);         // FIX 2
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    navigate('/');
+
+    if (!selectedImg) {
+      await updateProfile({ fullName: name, bio });             // FIX 1
+      navigate("/");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.readAsDataURL(selectedImg);
+
+    reader.onload = async () => {
+      const base64Image = reader.result;
+      await updateProfile({                                  // FIX 1
+        profilePic: base64Image,
+        fullName: name,
+        bio,
+      });
+      navigate("/");
+    };
   };
 
   return (
     <>
       <div className="min-h-screen bg-cover bg-no-repeat flex items-center justify-center">
-
         <div className="w-5/6 max-w-2xl backdrop-blur-2xl text-gray-300 border-2 border-gray-600 flex items-center justify-between max-sm:flex-col-reverse rounded-lg">
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5 p-10 flex-1">
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-col gap-5 p-10 flex-1"
+          >
             <h3 className="text-lg">Profile details</h3>
 
-            <label htmlFor="avatar" className="flex items-center gap-3 cursor-pointer">
+            <label
+              htmlFor="avatar"
+              className="flex items-center gap-3 cursor-pointer"
+            >
               <input
                 onChange={(e) => setselectedImg(e.target.files[0])}
                 type="file"
@@ -30,7 +56,6 @@ const ProfilePage = () => {
                 accept=".png,.jpg,.jpeg"
                 hidden
               />
-
               <img
                 src={
                   selectedImg
@@ -40,7 +65,6 @@ const ProfilePage = () => {
                 alt=""
                 className={`w-12 h-12 ${selectedImg && "rounded-full"}`}
               />
-
               Upload profile image
             </label>
 
@@ -71,8 +95,8 @@ const ProfilePage = () => {
           </form>
 
           <img
-            className="max-w-44 aspect-square rounded-full mx-10 max-sm:mt-10"
-            src={assets.logo_icon}
+            className={`max-w-44 aspect-square rounded-full mx-10 max-sm:mt-10 ${selectedImg && "rounded-full"}`}
+            src={authUser?.profilePic || assets.logo_icon}
             alt=""
           />
         </div>
