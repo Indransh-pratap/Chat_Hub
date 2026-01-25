@@ -3,109 +3,132 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
 
-const backendURL = import.meta.env.VITE_BACKEND_URL;
-axios.defaults.baseURL = backendURL;
-
 export const AuthContext = createContext();
 
+// 🔴 IMPORTANT: Backend URL from env
+const backendURL = import.meta.env.VITE_BACKEND_URL;
+
+// 🔴 Create axios instance (better than global defaults)
+const api = axios.create({
+  baseURL: backendURL,
+  withCredentials: true,
+});
+
 export const AuthProvider = ({ children }) => {
-  const [Token, setToken] = useState(localStorage.getItem("token"));
+  const [token, setToken] = useState(localStorage.getItem("token"));
   const [authUser, setAuthUser] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
-  const [socket, setsocket] = useState(null);
+  const [socket, setSocket] = useState(null);
 
-  // 🔹 Check if user is authenticated using token
+  // ================= CHECK AUTH =================
   const checkAuth = async () => {
     try {
-      const { data } = await axios.get("/api/auth/check");
+      const { data } = await api.get("/api/auth/check");
+
       if (data.success) {
         setAuthUser(data.user);
         connectSocket(data.user);
       }
     } catch (error) {
-      toast.error(error.message);
+      console.log("Check auth error:", error);
+      // Silent fail is better here
     }
   };
 
-  // 🔹 Login / Signup
-  const login = async (State, Credentials) => {
+  // ================= LOGIN / SIGNUP =================
+  const login = async (state, credentials) => {
     try {
-      const { data } = await axios.post(`/api/auth/${State}`, Credentials);
+      const { data } = await api.post(`/api/auth/${state}`, credentials);
 
       if (data.success) {
         setAuthUser(data.userData);
-        connectSocket(data.userData);
 
-        // FIX: send token in Authorization header
-        axios.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
+        // 🔴 Set token in header
+        api.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
 
         setToken(data.token);
         localStorage.setItem("token", data.token);
+
+        connectSocket(data.userData);
 
         toast.success(data.message);
       } else {
         toast.error(data.message);
       }
     } catch (error) {
-      toast.error(error.message);
+      console.error("Login error:", error);
+      toast.error(
+        error?.response?.data?.message || "Network error, backend not reachable"
+      );
     }
   };
 
-  // 🔹 Logout
-  const logout = async () => {
+  // ================= LOGOUT =================
+  const logout = () => {
     localStorage.removeItem("token");
     setToken(null);
     setAuthUser(null);
     setOnlineUsers([]);
-    axios.defaults.headers.common["Authorization"] = null;   // FIX
+
+    delete api.defaults.headers.common["Authorization"];
+
+    if (socket) {
+      socket.disconnect();
+      setSocket(null);
+    }
+
     toast.success("Logout successfully");
   };
 
-  // 🔹 Update profile (POST matches backend route)
+  // ================= UPDATE PROFILE =================
   const updateProfile = async (body) => {
     try {
-      const { data } = await axios.post("/api/auth/update-profile", body);
+      const { data } = await api.post("/api/auth/update-profile", body);
 
       if (data.success) {
         setAuthUser(data.user);
-        toast.success("profile updated successfully");
+        toast.success("Profile updated successfully");
       } else {
         toast.error(data.message);
       }
     } catch (error) {
-      toast.error(error.message);
+      console.error("Update profile error:", error);
+      toast.error("Failed to update profile");
     }
   };
 
-  // 🔹 Connect socket
+  // ================= CONNECT SOCKET =================
   const connectSocket = (userData) => {
     if (!userData || socket?.connected) return;
 
     const newSocket = io(backendURL, {
+      withCredentials: true,
       query: {
         userId: userData._id,
       },
     });
 
-    newSocket.connect();
-    setsocket(newSocket);
+    newSocket.on("connect", () => {
+      console.log("Socket connected:", newSocket.id);
+    });
 
     newSocket.on("getOnlineUsers", (userIds) => {
       setOnlineUsers(userIds);
     });
+
+    setSocket(newSocket);
   };
 
-  // 🔹 Restore auth on refresh
+  // ================= RESTORE AUTH ON REFRESH =================
   useEffect(() => {
-    if (Token) {
-      // FIX: correct header name
-      axios.defaults.headers.common["Authorization"] = `Bearer ${Token}`;
-      checkAuth();   // FIX: restore user from token
+    if (token) {
+      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      checkAuth();
     }
   }, []);
 
   const value = {
-    axios,
+    axios: api,          // 🔴 use this everywhere, not default axios
     authUser,
     onlineUsers,
     socket,
