@@ -189,10 +189,11 @@ const SnakeDuel = ({ opponent, isMultiplayer = false, onGameEnd }) => {
     return cells;
   };
 
-  if (!gameActive) {
-    return (
-      <div className="h-full flex flex-col items-center justify-center p-8 bg-[#050505] text-center">
-        <div className="max-w-md w-full space-y-8">
+  return (
+    <div className="h-full flex flex-col items-center justify-center p-4 bg-[#050505]">
+      {!gameActive ? (
+        <div className="h-full flex flex-col items-center justify-center p-8 bg-[#050505] text-center">
+          <div className="max-w-md w-full space-y-8">
             <div className="relative w-24 h-24 mx-auto">
                 <div className="absolute inset-0 bg-yellow-500/20 rounded-full blur-2xl animate-pulse" />
                 <div className="relative bg-black/40 border border-yellow-500/30 rounded-full w-full h-full flex items-center justify-center">
@@ -223,64 +224,62 @@ const SnakeDuel = ({ opponent, isMultiplayer = false, onGameEnd }) => {
             </button>
             
             <p className="text-[10px] text-gray-600 uppercase font-black tracking-widest">Target Operative: {opponent?.fullName || "None Selected"}</p>
+          </div>
         </div>
-      </div>
-    );
-  }
+      ) : (
+        <>
+          {/* Score Board */}
+          <div className="w-full max-w-[400px] flex justify-between items-center mb-6 bg-white/5 p-4 rounded-2xl border border-white/10 backdrop-blur-md">
+              <div className={`flex flex-col items-center gap-1 ${isInviter ? "text-[var(--neon-red)]" : "text-gray-400"}`}>
+                  <p className="text-[10px] uppercase font-bold tracking-widest">Inviter</p>
+                  <p className="text-xl font-black">{score1}</p>
+              </div>
+              <div className="w-px h-8 bg-white/10" />
+              <div className="flex items-center gap-2 text-yellow-500">
+                  <Zap className="w-4 h-4 fill-yellow-500" />
+                  <span className="text-xs font-bold uppercase tracking-widest">Duel</span>
+              </div>
+              <div className="w-px h-8 bg-white/10" />
+              <div className={`flex flex-col items-center gap-1 ${!isInviter ? "text-white" : "text-gray-400"}`}>
+                  <p className="text-[10px] uppercase font-bold tracking-widest">Follower</p>
+                  <p className="text-xl font-black">{score2}</p>
+              </div>
+          </div>
 
-  return (
-    <div className="h-full flex flex-col items-center justify-center p-4 bg-[#050505]">
-        
-        {/* Score Board */}
-        <div className="w-full max-w-[400px] flex justify-between items-center mb-6 bg-white/5 p-4 rounded-2xl border border-white/10 backdrop-blur-md">
-            <div className={`flex flex-col items-center gap-1 ${isInviter ? "text-[var(--neon-red)]" : "text-gray-400"}`}>
-                <p className="text-[10px] uppercase font-bold tracking-widest">Inviter</p>
-                <p className="text-xl font-black">{score1}</p>
-            </div>
-            <div className="w-px h-8 bg-white/10" />
-            <div className="flex items-center gap-2 text-yellow-500">
-                <Zap className="w-4 h-4 fill-yellow-500" />
-                <span className="text-xs font-bold uppercase tracking-widest">Duel</span>
-            </div>
-            <div className="w-px h-8 bg-white/10" />
-            <div className={`flex flex-col items-center gap-1 ${!isInviter ? "text-white" : "text-gray-400"}`}>
-                <p className="text-[10px] uppercase font-bold tracking-widest">Follower</p>
-                <p className="text-xl font-black">{score2}</p>
-            </div>
-        </div>
+          {/* Game Canvas */}
+          <div className="relative aspect-square w-full max-w-[400px] bg-[#0a0a0d] border-2 border-white/10 rounded-xl overflow-hidden shadow-2xl">
+              <div 
+                className="grid w-full h-full"
+                style={{ 
+                  gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`,
+                  gridTemplateRows: `repeat(${GRID_SIZE}, 1fr)`
+                }}
+              >
+                  {renderGrid()}
+              </div>
 
-        {/* Game Canvas */}
-        <div className="relative aspect-square w-full max-w-[400px] bg-[#0a0a0d] border-2 border-white/10 rounded-xl overflow-hidden shadow-2xl">
-            <div 
-              className="grid w-full h-full"
-              style={{ 
-                gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`,
-                gridTemplateRows: `repeat(${GRID_SIZE}, 1fr)`
-              }}
-            >
-                {renderGrid()}
-            </div>
+              {gameOver && (
+                  <div className="absolute inset-0 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center z-50 text-center p-6">
+                      <Trophy className="w-16 h-16 text-yellow-500 mb-4 animate-bounce" />
+                      <h2 className="text-3xl font-black text-white uppercase italic tracking-tighter mb-2">Game Over</h2>
+                      <p className="text-[var(--neon-red)] font-bold tracking-widest uppercase mb-6 drop-shadow-sm">
+                          Winner: {winner === "YOU" ? "VICTORY SECURED" : winner}
+                      </p>
+                      <button 
+                          onClick={() => window.location.reload()}
+                          className="bg-white text-black px-8 py-3 rounded-full font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl"
+                      >
+                          Re-Engage
+                      </button>
+                  </div>
+              )}
+          </div>
 
-            {gameOver && (
-                <div className="absolute inset-0 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center z-50 text-center p-6">
-                    <Trophy className="w-16 h-16 text-yellow-500 mb-4 animate-bounce" />
-                    <h2 className="text-3xl font-black text-white uppercase italic tracking-tighter mb-2">Game Over</h2>
-                    <p className="text-[var(--neon-red)] font-bold tracking-widest uppercase mb-6 drop-shadow-sm">
-                        Winner: {winner === "YOU" ? "VICTORY SECURED" : winner}
-                    </p>
-                    <button 
-                        onClick={() => window.location.reload()}
-                        className="bg-white text-black px-8 py-3 rounded-full font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl"
-                    >
-                        Re-Engage
-                    </button>
-                </div>
-            )}
-        </div>
-
-        <div className="mt-6 text-[10px] text-gray-500 uppercase font-bold tracking-[0.3em] flex items-center gap-2">
-            <Skull className="w-3 h-3" /> Movement keys active
-        </div>
+          <div className="mt-6 text-[10px] text-gray-500 uppercase font-bold tracking-[0.3em] flex items-center gap-2">
+              <Skull className="w-3 h-3" /> Movement keys active
+          </div>
+        </>
+      )}
     </div>
   );
 };

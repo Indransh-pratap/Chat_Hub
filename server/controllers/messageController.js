@@ -78,7 +78,7 @@ export const markMessageAsSEEN = async (req, res) => {
 
 export const sendMessage = async (req, res) => {
   try {
-    const { text, image, type, gameId } = req.body; 
+    const { text, image, video, type, gameId } = req.body; 
     const receiverId = req.params.id;
     const senderId = req.user._id; // senderID -> senderId fix
 
@@ -88,13 +88,20 @@ export const sendMessage = async (req, res) => {
       imageUrl = uploadresponse.secure_url;
     }
 
+    let videoUrl;
+    if (video) {
+      const uploadresponse = await cloudinary.uploader.upload(video, { resource_type: "video" });
+      videoUrl = uploadresponse.secure_url;
+    }
+
     const newMessage = await Message.create({
       // await missing fix
       senderId,
       receiverId,
       text,
       image: imageUrl,
-      type: type || 'text',
+      video: videoUrl,
+      type: type || (video ? 'video' : (image ? 'image' : 'text')),
       gameId: gameId,
     });
     // emit the new message to receiver's socket

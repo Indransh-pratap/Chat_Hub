@@ -114,10 +114,11 @@ const RockPaperScissors = ({ opponent, gameStateOverride, isMultiplayer = false,
     setResult(null);
   };
 
-  if (!gameActive) {
-    return (
-      <div className="h-full flex flex-col items-center justify-center p-8 bg-[#050505] text-center">
-        <div className="max-w-md w-full space-y-8">
+  return (
+    <div className="h-full flex flex-col items-center justify-center p-4">
+      {!gameActive ? (
+        <div className="h-full flex flex-col items-center justify-center p-8 bg-[#050505] text-center">
+          <div className="max-w-md w-full space-y-8">
             <div className="relative w-24 h-24 mx-auto">
                 <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-2xl animate-pulse" />
                 <div className="relative bg-black/40 border border-blue-500/30 rounded-full w-full h-full flex items-center justify-center">
@@ -147,16 +148,10 @@ const RockPaperScissors = ({ opponent, gameStateOverride, isMultiplayer = false,
             </button>
             
             <p className="text-[10px] text-gray-600 uppercase font-black tracking-widest">Target Operative: {opponent?.fullName || "None Selected"}</p>
+          </div>
         </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="h-full flex flex-col items-center justify-center p-4">
+      ) : (
         <div className="flex flex-col items-center gap-8 w-full max-w-2xl">
-
-          
           <div className="h-8">
             {result ? (
               <p className={`text-2xl font-bold tracking-widest ${result === 'WIN' ? 'text-green-500' : result === 'LOSE' ? 'text-[var(--neon-red)]' : 'text-yellow-500'}`}>
@@ -218,8 +213,8 @@ const RockPaperScissors = ({ opponent, gameStateOverride, isMultiplayer = false,
               NEXT ROUND
             </button>
           )}
-
         </div>
+      )}
     </div>
   );
 };

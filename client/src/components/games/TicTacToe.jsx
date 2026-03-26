@@ -114,48 +114,44 @@ const TicTacToe = ({ opponent, gameStateOverride, isMultiplayer = false, onGameE
     }
   };
 
-  if (!gameActive) {
-    return (
-      <div className="h-full flex flex-col items-center justify-center p-8 bg-[#050505] text-center">
-        <div className="max-w-md w-full space-y-8">
+  return (
+    <div className="h-full flex flex-col items-center justify-center p-4">
+      {!gameActive ? (
+        <div className="h-full flex flex-col items-center justify-center p-8 bg-[#050505] text-center">
+          <div className="max-w-md w-full space-y-8">
             <div className="relative w-24 h-24 mx-auto">
-                <div className="absolute inset-0 bg-[var(--neon-red)]/20 rounded-full blur-2xl animate-pulse" />
-                <div className="relative bg-black/40 border border-[var(--neon-red)]/30 rounded-full w-full h-full flex items-center justify-center">
-                    <Target className="w-12 h-12 text-[var(--neon-red)] opacity-50" />
-                </div>
+              <div className="absolute inset-0 bg-[var(--neon-red)]/20 rounded-full blur-2xl animate-pulse" />
+              <div className="relative bg-black/40 border border-[var(--neon-red)]/30 rounded-full w-full h-full flex items-center justify-center">
+                <Target className="w-12 h-12 text-[var(--neon-red)] opacity-50" />
+              </div>
             </div>
             
             <div className="space-y-2">
-                <h3 className="text-3xl font-black tracking-tighter text-white uppercase italic">Tic Tac Toe Protocol</h3>
-                <p className="text-gray-500 text-xs uppercase tracking-[0.4em] font-bold">Logic Duel • v1.0</p>
+              <h3 className="text-3xl font-black tracking-tighter text-white uppercase italic">Tic Tac Toe Protocol</h3>
+              <p className="text-gray-500 text-xs uppercase tracking-[0.4em] font-bold">Logic Duel • v1.0</p>
             </div>
 
             <div className="p-6 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-md">
-                <p className="text-gray-400 text-sm leading-relaxed italic">
-                    "A classic test of spatial awareness and foresight. Anticipate every move, or face tactical elimination."
-                </p>
+              <p className="text-gray-400 text-sm leading-relaxed italic">
+                "A classic test of spatial awareness and foresight. Anticipate every move, or face tactical elimination."
+              </p>
             </div>
 
             <button 
-                onClick={() => {
-                    if (!opponent) return toast.error("Select an operative first!");
-                    invitePlayer();
-                }}
-                className="w-full bg-[var(--neon-red)] hover:bg-red-500 text-white py-4 rounded-2xl font-black uppercase tracking-[0.2em] shadow-[0_0_30px_rgba(255,0,60,0.3)] hover:scale-105 transition-all flex items-center justify-center gap-3 active:scale-95"
+              onClick={() => {
+                if (!opponent) return toast.error("Select an operative first!");
+                invitePlayer();
+              }}
+              className="w-full bg-[var(--neon-red)] hover:bg-red-500 text-white py-4 rounded-2xl font-black uppercase tracking-[0.2em] shadow-[0_0_30px_rgba(255,0,60,0.3)] hover:scale-105 transition-all flex items-center justify-center gap-3 active:scale-95"
             >
-                <Zap className="w-5 h-5 fill-white" /> Initiate Sequence
+              <Zap className="w-5 h-5 fill-white" /> Initiate Sequence
             </button>
             
             <p className="text-[10px] text-gray-600 uppercase font-black tracking-widest">Target Operative: {opponent?.fullName || "None Selected"}</p>
+          </div>
         </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="h-full flex flex-col items-center justify-center p-4">
+      ) : (
         <div className="flex flex-col items-center gap-8 w-full">
-
           <div className="flex justify-between w-full max-w-sm px-4">
             <div className={`text-center p-3 rounded-xl border ${playerSymbol === 'X' ? 'border-[var(--neon-red)] bg-[#1a0005]' : 'border-gray-800'}`}>
               <p className="font-bold text-white tracking-widest text-xs uppercase">You ({playerSymbol})</p>
@@ -192,6 +188,7 @@ const TicTacToe = ({ opponent, gameStateOverride, isMultiplayer = false, onGameE
             ))}
           </div>
         </div>
+      )}
     </div>
   );
 };
