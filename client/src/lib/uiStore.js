@@ -10,4 +10,14 @@ export const useUIStore = create((set) => ({
   
   isMusicPlaying: false,
   toggleMusic: () => set((state) => ({ isMusicPlaying: !state.isMusicPlaying })),
+
+  incomingCall: null, // { callerName, fromUserId, offer, signalType }
+  activeCall: null,   // { remoteUserId, offer, isReceiver, signalType }
+  setIncomingCall: (call) => set({ incomingCall: call }),
+  setActiveCall: (call) => set({ activeCall: call }),
+  clearCall: () => set({ incomingCall: null, activeCall: null }),
+
+  activeGame: null, // { roomId, gameId, opponentId, role, messageId }
+  setActiveGame: (game) => set({ activeGame: game }),
+  clearGame: () => set({ activeGame: null }),
 }));

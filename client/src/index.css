@@ -5,8 +5,8 @@
   --neon-red: #ff003c;
   --dark-red: #8b001a;
   --bg-dark: #050505;
-  --bg-panel: rgba(20, 10, 15, 0.6);
-  --border-neon: rgba(255, 0, 60, 0.4);
+  --bg-panel: #0a0a0d;
+  --border-neon: #ff003c;
 }
 
 * {
@@ -60,26 +60,7 @@ body {
 
 .glass-panel {
   background: var(--bg-panel);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid #1f1f26;
 }
 
-/* Scanline / CRT effect overlay */
-.scanlines::before {
-  content: " ";
-  display: block;
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(18, 16, 16, 0) 50%,
-    rgba(0, 0, 0, 0.25) 50%
-  );
-  background-size: 100% 4px;
-  z-index: 50;
-  pointer-events: none;
-}
+/* Removed scanline effect for clean UI */

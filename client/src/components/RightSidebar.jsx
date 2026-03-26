@@ -34,7 +34,7 @@ const RightSidebar = ({ setShowRightSidebar }) => {
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: 300, opacity: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      className="bg-[var(--bg-panel)] backdrop-blur-md text-white w-full h-full relative flex flex-col max-md:hidden custom-scrollbar overflow-y-auto"
+      className="bg-[var(--bg-panel)] text-white w-full h-full relative flex flex-col max-md:hidden custom-scrollbar overflow-y-auto"
     >
       {/* 🔴 HIDE BUTTON */}
       <div className="absolute top-4 right-4 z-10">
@@ -72,7 +72,7 @@ const RightSidebar = ({ setShowRightSidebar }) => {
           <h1 className="text-2xl font-bold tracking-wider text-white flex justify-center items-center gap-2">
             {selectedUser.fullName || "UNKNOWN SUBJECT"}
           </h1>
-          <div className="inline-flex items-center gap-1 mt-1 px-3 py-1 rounded-full bg-black/40 border border-gray-800">
+          <div className="inline-flex items-center gap-1 mt-1 px-3 py-1 rounded-full bg-[#121217] border border-gray-800">
             <Activity className={`w-3 h-3 ${isOnline ? "text-green-500" : "text-gray-500"}`} />
             <span className={`text-[10px] uppercase font-bold tracking-widest ${isOnline ? "text-green-400" : "text-gray-500"}`}>
               {isOnline ? "Active Signal" : "Signal Dropped"}
@@ -81,7 +81,7 @@ const RightSidebar = ({ setShowRightSidebar }) => {
         </div>
 
         {selectedUser.bio && (
-          <div className="w-full bg-black/30 border border-[#ff003c20] rounded-xl p-4 mt-2">
+          <div className="w-full bg-[#121217] border border-[#ff003c20] rounded-xl p-4 mt-2">
             <p className="text-xs text-[var(--neon-red)] uppercase tracking-wider mb-2 font-semibold">Decrypted Bio</p>
             <p className="text-sm text-gray-300 leading-relaxed font-light">
               "{selectedUser.bio}"
@@ -101,7 +101,7 @@ const RightSidebar = ({ setShowRightSidebar }) => {
         </div>
 
         {msgImages.length === 0 ? (
-          <div className="bg-black/20 border border-dashed border-gray-800 rounded-xl p-6 text-center">
+          <div className="bg-[#121217] border border-dashed border-gray-800 rounded-xl p-6 text-center">
             <p className="text-gray-500 text-xs tracking-widest uppercase">No Visual Data</p>
           </div>
         ) : (

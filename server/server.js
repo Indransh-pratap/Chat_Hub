@@ -6,65 +6,121 @@ import { connectDB } from "./lib/db.js";
 import userRouter from "./routes/Userroutes.js";
 import messageRouter from "./routes/messageRoutes.js";
 import { Server } from "socket.io";
+import passport from "./lib/passport.js";
+import { handleGameEvents } from "./socket/gameHandlers.js";
 
 const app = express();
 const server = http.createServer(app);
 
-// 🔥🔥🔥 CORS FOR EXPRESS (THIS WAS MISSING)
-app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "https://realtime-chat-app-rho-flax.vercel.app"  // 👈 your frontend URL
-  ],
-  credentials: true,
-}));
+// ✅ CORS
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://realtime-chat-app-rho-flax.vercel.app",
+    ],
+    credentials: true,
+  })
+);
 
-// Body limits
+// ✅ Body parser
 app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ limit: "10mb", extended: true }));
+app.use(express.urlencoded({ extended: true }));
 
-// 🔥 Socket.IO with same CORS
+// ✅ Passport init (VERY IMPORTANT)
+app.use(passport.initialize());
+
+// ✅ Socket.io
 export const io = new Server(server, {
   cors: {
     origin: [
       "http://localhost:5173",
-      "https://realtime-chat-app-rho-flax.vercel.app"
+      "https://realtime-chat-app-rho-flax.vercel.app",
     ],
-    methods: ["GET", "POST"],
     credentials: true,
   },
 });
 
 export const userSocketMap = {};
 
-// Socket handler
 io.on("connection", (socket) => {
   const userId = socket.handshake.query.userId;
-  console.log("User connected:", userId);
 
   if (userId) userSocketMap[userId] = socket.id;
 
   io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
   socket.on("disconnect", () => {
-    console.log("User disconnected:", userId);
     delete userSocketMap[userId];
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
   });
+
+  // 🎮 MULTIPLAYER GAMES
+  handleGameEvents(socket, userId);
+
+  // 📞 CALL RELAY
+  socket.on("call-user", (data) => {
+    const receiverSocketId = userSocketMap[data.to];
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("call-user", { 
+        from: userId, 
+        offer: data.offer, 
+        name: data.name 
+      });
+    }
+  });
+
+  socket.on("answer-call", (data) => {
+    const receiverSocketId = userSocketMap[data.to];
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("call-answered", data.answer);
+    }
+  });
+
+  socket.on("ice-candidate", (data) => {
+    const receiverSocketId = userSocketMap[data.to];
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("ice-candidate", { candidate: data.candidate });
+    }
+  });
+
+  socket.on("end-call", (data) => {
+    const receiverSocketId = userSocketMap[data.to];
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("call-ended");
+    }
+  });
+
+  // ✨ TYPING
+  socket.on("typing", (data) => {
+    const receiverSocketId = userSocketMap[data.to];
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("typing", { from: userId });
+    }
+  });
+
+  // 👀 CHAT SEEN
+  socket.on("chat-seen", (data) => {
+    const receiverSocketId = userSocketMap[data.to];
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("chat-seen", { from: userId });
+    }
+  });
 });
 
-// Routes
+// ✅ Routes
 app.get("/api/status", (req, res) => res.send("Server is Live"));
+
 app.use("/api/auth", userRouter);
 app.use("/api/messages", messageRouter);
 
-// Connect DB
+// ✅ DB
 await connectDB();
 
-// Local dev
+// ✅ Server start
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log("Server running on PORT:", PORT));
+server.listen(PORT, () =>
+  console.log("Server running on PORT:", PORT)
+);
 
-
-// Export for Vercel
 export default server;

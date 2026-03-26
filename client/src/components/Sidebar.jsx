@@ -42,7 +42,7 @@ const Sidebar = () => {
   };
 
   return (
-    <div className={`h-full flex flex-col p-4 text-white ${selectedUser ? "max-md:hidden" : ""}`}>
+    <div className={`h-full flex flex-col p-4 text-white`}>
       
       {/* Search Header */}
       <div className="mb-6">
@@ -90,8 +90,8 @@ const Sidebar = () => {
                   whileTap={{ scale: 0.98 }}
                   className={`relative flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors border glass-panel ${
                     isSelected 
-                      ? "bg-red-900/20 border-[var(--neon-red)] shadow-[0_0_15px_rgba(255,0,60,0.15)]" 
-                      : "border-transparent hover:border-red-900/50 hover:bg-black/40"
+                      ? "bg-[#1a0005] border-[var(--neon-red)] shadow-[0_0_15px_rgba(255,0,60,0.15)]" 
+                      : "border-transparent hover:border-red-900/50 hover:bg-[#121217]"
                   }`}
                 >
                   <div className="relative">

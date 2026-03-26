@@ -1,5 +1,4 @@
 import { useContext, useState } from "react";
-import { useUIStore } from "../lib/uiStore";
 import ChatContainer from "../components/ChatContainer";
 import RightSidebar from "../components/RightSidebar";
 import Sidebar from "../components/Sidebar";
@@ -10,46 +9,39 @@ import MusicPlayer from "../components/MusicPlayer";
 
 const HomePage = () => {
   const { selectedUser } = useContext(ChatContext);
-
-  // 🔴 Controls hide/show of RightSidebar
   const [showRightSidebar, setShowRightSidebar] = useState(true);
 
   return (
-    <div className="w-full h-screen overflow-hidden flex flex-col bg-[var(--bg-dark)] scanlines">
-      {/* TOP NAVBAR */}
+    <div className="h-screen flex flex-col pt-[76px] bg-black">
       <Navbar />
 
-      {/* MAIN LAYOUT */}
-      <div className="flex-1 overflow-hidden relative p-4">
-        <div className={`h-full w-full max-w-[1600px] mx-auto glass-panel rounded-2xl overflow-hidden grid relative neon-border ${
-            selectedUser && showRightSidebar
-              ? "grid-cols-[300px_1fr_320px]"
-              : "grid-cols-[300px_1fr]"
-          }`}
-        >
-          {/* LEFT SIDEBAR */}
-          <div className="h-full overflow-hidden border-r border-[#ffffff10]">
-            <Sidebar />
-          </div>
+      <div className="flex-1 flex overflow-hidden">
+        
+        {/* LEFT SIDEBAR */}
+        <div className="w-[300px] border-r border-gray-800">
+          <Sidebar />
+        </div>
 
-          {/* MAIN CHAT */}
-          <div className="h-full w-full overflow-hidden">
+        {/* MAIN CHAT */}
+        <div className="flex-1">
+          {selectedUser ? (
             <ChatContainer />
-          </div>
-
-          {/* RIGHT SIDEBAR (CONTROLLED) */}
-          {selectedUser && showRightSidebar && (
-            <div className="h-full overflow-hidden border-l border-[#ffffff10]">
-              <RightSidebar setShowRightSidebar={setShowRightSidebar} />
+          ) : (
+            <div className="flex items-center justify-center h-full text-gray-500">
+              Select a user to start chat
             </div>
           )}
         </div>
 
-        {/* FLOATING COMPONENTS */}
-        <MusicPlayer />
+        {/* RIGHT SIDEBAR */}
+        {selectedUser && showRightSidebar && (
+          <div className="w-[300px] border-l border-gray-800">
+            <RightSidebar setShowRightSidebar={setShowRightSidebar} />
+          </div>
+        )}
       </div>
 
-      {/* MODALS */}
+  
       <SettingsModal />
     </div>
   );

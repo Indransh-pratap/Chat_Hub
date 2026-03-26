@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-
+import { useEffect, useRef, useState, useContext } from "react";
+import { AuthContext } from "../../context/AuthContext";
 import CallControl from "./CallControl";
 
 function VideoCalling({ remoteUserId, offer, isReceiver, onEnd }) {
@@ -8,6 +8,7 @@ function VideoCalling({ remoteUserId, offer, isReceiver, onEnd }) {
 
   const [stream, setStream] = useState(null);
   const [peer, setPeer] = useState(null);
+  const { socket, authUser } = useContext(AuthContext);
 
   // 🎥 Get media
   useEffect(() => {
@@ -70,6 +71,7 @@ function VideoCalling({ remoteUserId, offer, isReceiver, onEnd }) {
     socket.emit("call-user", {
       to: remoteUserId,
       offer,
+      name: authUser?.fullName || "UNKNOWN"
     });
 
     setPeer(pc);
@@ -135,7 +137,9 @@ function VideoCalling({ remoteUserId, offer, isReceiver, onEnd }) {
     if (peer) peer.close();
     if (stream) stream.getTracks().forEach(track => track.stop());
 
-    socket.emit("end-call", { to: remoteUserId });
+    if (socket) {
+      socket.emit("end-call", { to: remoteUserId });
+    }
 
     onEnd();
   }
@@ -153,7 +157,7 @@ function VideoCalling({ remoteUserId, offer, isReceiver, onEnd }) {
   return (
     <div className="fixed inset-0 z-[100] bg-black grid place-items-center">
       {/* Sci-fi Overlays */}
-      <div className="absolute inset-0 scanlines pointer-events-none z-40"></div>
+      <div className="absolute inset-0 pointer-events-none z-40"></div>
       <div className="absolute inset-0 border-[4px] border-[var(--neon-red)] opacity-20 pointer-events-none z-10 box-border"></div>
       <div className="absolute top-4 left-4 z-50 text-[var(--neon-red)] font-mono text-sm tracking-widest neon-text">
         <p>SECURE LINK [ESTABLISHED]</p>
@@ -167,7 +171,7 @@ function VideoCalling({ remoteUserId, offer, isReceiver, onEnd }) {
           autoPlay 
           className="w-full h-full object-cover filter contrast-125 brightness-90 grayscale-[0.2]" 
         />
-        <div className="absolute inset-0 bg-red-900/10 mix-blend-overlay pointer-events-none"></div>
+        <div className="absolute inset-0 bg-[#0a0a0d] mix-blend-overlay pointer-events-none"></div>
 
         {/* Local Video (Floating PIP) */}
         <div className="absolute top-4 right-4 w-48 aspect-video bg-black border-2 border-[var(--neon-red)] rounded-xl overflow-hidden shadow-[0_0_20px_var(--neon-red)] z-30">

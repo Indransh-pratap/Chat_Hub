@@ -8,7 +8,7 @@ export const signup = async (req, res) => {
   try {
     const { fullName, email, password, bio } = req.body;
 
-    if (!fullName || !email || !password || !bio) {
+    if (!fullName || !email || !password) {
       return res.json({ success: false, message: "Missing details" });
     }
 
@@ -30,15 +30,8 @@ export const signup = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      userData: {
-        _id: newUser._id,
-        fullName: newUser.fullName,
-        email: newUser.email,
-        bio: newUser.bio,
-        profilePic: newUser.profilePic,
-      },
+      userData: newUser,
       token,
-      message: "Account created successfully",
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -68,15 +61,8 @@ export const login = async (req, res) => {
 
     res.json({
       success: true,
-      userData: {
-        _id: userData._id,
-        fullName: userData.fullName,
-        email: userData.email,
-        bio: userData.bio,
-        profilePic: userData.profilePic,
-      },
+      userData: userData,
       token,
-      message: "Login successful",
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -91,13 +77,7 @@ export const updateProfile = async (req, res) => {
 
     let updatedUser;
 
-    if (!profilePic) {
-      updatedUser = await User.findByIdAndUpdate(
-        userId,
-        { bio, fullName },
-        { new: true }
-      );
-    } else {
+    if (profilePic) {
       const upload = await cloudinary.uploader.upload(profilePic);
 
       updatedUser = await User.findByIdAndUpdate(
@@ -107,6 +87,12 @@ export const updateProfile = async (req, res) => {
           bio,
           fullName,
         },
+        { new: true }
+      );
+    } else {
+      updatedUser = await User.findByIdAndUpdate(
+        userId,
+        { bio, fullName },
         { new: true }
       );
     }
@@ -119,20 +105,13 @@ export const updateProfile = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 /* ================= CHECK AUTH ================= */
 export const check = async (req, res) => {
   try {
-    // req.user is set by protectRoutes middleware
     res.json({
       success: true,
-      user: {
-        _id: req.user._id,
-        fullName: req.user.fullName,
-        email: req.user.email,
-        bio: req.user.bio,
-        profilePic: req.user.profilePic,
-      },
-      message: "User authenticated",
+      user: req.user,
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

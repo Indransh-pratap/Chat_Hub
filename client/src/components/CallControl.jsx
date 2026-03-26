@@ -25,14 +25,14 @@ function CallControl({ stream, endCall }) {
     <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-6 glass-panel border border-[var(--neon-red)] px-6 py-3 rounded-full shadow-[0_0_20px_rgba(255,0,60,0.3)] z-50">
       <button 
         onClick={toggleMic}
-        className={`p-4 rounded-full transition-all ${micEnabled ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-red-900/50 hover:bg-red-900 border border-[var(--neon-red)] text-[var(--neon-red)] shadow-[0_0_10px_var(--neon-red)]'}`}
+        className={`p-4 rounded-full transition-all ${micEnabled ? 'bg-black hover:bg-gray-800 text-white' : 'bg-[#1a0005] hover:bg-red-950 border border-[var(--neon-red)] text-[var(--neon-red)] shadow-[0_0_10px_var(--neon-red)]'}`}
       >
         {micEnabled ? <Mic className="w-6 h-6" /> : <MicOff className="w-6 h-6" />}
       </button>
 
       <button 
         onClick={toggleCamera}
-        className={`p-4 rounded-full transition-all ${cameraEnabled ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-red-900/50 hover:bg-red-900 border border-[var(--neon-red)] text-[var(--neon-red)] shadow-[0_0_10px_var(--neon-red)]'}`}
+        className={`p-4 rounded-full transition-all ${cameraEnabled ? 'bg-black hover:bg-gray-800 text-white' : 'bg-[#1a0005] hover:bg-red-950 border border-[var(--neon-red)] text-[var(--neon-red)] shadow-[0_0_10px_var(--neon-red)]'}`}
       >
         {cameraEnabled ? <Video className="w-6 h-6" /> : <VideoOff className="w-6 h-6" />}
       </button>

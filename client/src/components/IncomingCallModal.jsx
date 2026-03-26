@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
-import { PhoneIncoming, phoneOff, PhoneOff } from "lucide-react";
+import { PhoneIncoming, PhoneOff } from "lucide-react";
 
 function IncomingCallModal({ caller, onAccept, onReject }) {
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#050505] bg-opacity-95">
       <div className="absolute inset-0 scanlines pointer-events-none"></div>
       
       <motion.div 

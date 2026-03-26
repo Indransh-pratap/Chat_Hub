@@ -40,25 +40,45 @@ export const ChatProvider = ({ children }) => {
   };
 
   // ================== SEND MESSAGE ==================
-  const sendMessage = async (messagesData) => {
-    if (!selectedUser?._id) {
+  const sendMessage = async (messagesData, recipientId = null) => {
+    const targetId = recipientId || selectedUser?._id;
+
+    if (!targetId) {
       toast.error("No user selected");
       return;
     }
 
     try {
       const { data } = await axios.post(
-        `/api/messages/send/${selectedUser._id}`,
+        `/api/messages/send/${targetId}`,
         messagesData
       );
 
       if (data.success) {
-        setMessages((prevMessages) => [...prevMessages, data.newMessage]);
+        if (targetId === selectedUser?._id) {
+          setMessages((prevMessages) => [...prevMessages, data.newMessage]);
+        }
+        return data.newMessage;
       } else {
         toast.error(data.message || "Message not sent");
       }
     } catch (error) {
       toast.error(error?.message || "Failed to send message");
+    }
+  };
+
+  // ================== UPDATE MESSAGE STATUS ==================
+  const updateMessageStatus = async (messageId, status) => {
+    try {
+      const { data } = await axios.put(`/api/messages/status/${messageId}`, { status });
+      if (data.success) {
+        setMessages((prev) => 
+          prev.map((msg) => msg._id === messageId ? { ...msg, status } : msg)
+        );
+        return data.message;
+      }
+    } catch (error) {
+      toast.error("Failed to update status");
     }
   };
 
@@ -68,6 +88,16 @@ export const ChatProvider = ({ children }) => {
 
     // IMPORTANT: remove old listener before adding new one
     socket.off("newMessage");
+    socket.off("chat-seen");
+
+    socket.on("chat-seen", ({ from }) => {
+      // If the currently selected user saw our messages, mark them seen
+      if (selectedUser && selectedUser._id === from) {
+        setMessages((prev) => prev.map(msg => 
+          msg.senderId === authUser?._id ? { ...msg, seen: true } : msg
+        ));
+      }
+    });
 
     socket.on("newMessage", async (newMessage) => {
       if (selectedUser && newMessage.senderId === selectedUser._id) {
@@ -76,6 +106,7 @@ export const ChatProvider = ({ children }) => {
 
         try {
           await axios.put(`/api/messages/mark/${newMessage._id}`);
+          socket.emit("chat-seen", { to: selectedUser._id });
         } catch (err) {
           console.error("Failed to mark message as seen");
         }
@@ -94,6 +125,7 @@ export const ChatProvider = ({ children }) => {
   const unsubscribeFromMessages = () => {
     if (socket) {
       socket.off("newMessage");
+      socket.off("chat-seen");
     }
   };
 
@@ -115,6 +147,7 @@ export const ChatProvider = ({ children }) => {
     setSelectedUser,
     unseenMessages,
     setUnseenMessages,
+    updateMessageStatus,
   };
 
   return (

@@ -36,29 +36,61 @@ export const AuthProvider = ({ children }) => {
   };
 
   // ================= LOGIN / SIGNUP =================
-  const login = async (type, credentials) => {
+  const login = async (credentials) => {
     try {
-      const { data } = await api.post(`/api/auth/${type}`, credentials);
+      const { data } = await api.post(`/api/auth/login`, credentials);
 
       if (data.success) {
         setAuthUser(data.userData);
-
         api.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
-
         setToken(data.token);
         localStorage.setItem("token", data.token);
-
         connectSocket(data.userData);
-
         toast.success(data.message);
+        return true;
       } else {
         toast.error(data.message);
+        return false;
       }
     } catch (error) {
       console.error("Login error:", error);
       toast.error(
         error?.response?.data?.message || "Network error, backend not reachable"
       );
+      return false;
+    }
+  };
+
+  const signup = async (credentials) => {
+    try {
+      const { data } = await api.post(`/api/auth/signup`, credentials);
+      if (data.success) {
+        toast.success("Account created successfully! Please log in.");
+        return true;
+      } else {
+        toast.error(data.message);
+        return false;
+      }
+    } catch (error) {
+      console.error("Signup error:", error);
+      toast.error(
+        error?.response?.data?.message || "Network error, backend not reachable"
+      );
+      return false;
+    }
+  };
+
+  // ================= GOOGLE SUCCESS =================
+  const setGoogleSession = async (tokenData) => {
+    try {
+      api.defaults.headers.common["Authorization"] = `Bearer ${tokenData}`;
+      setToken(tokenData);
+      localStorage.setItem("token", tokenData);
+      await checkAuth(); // Hydrates authUser and connects socket
+      toast.success("Logged in with Google", { icon: "✅" });
+    } catch (err) {
+      console.error("Google session error:", err);
+      throw err;
     }
   };
 
@@ -132,8 +164,10 @@ export const AuthProvider = ({ children }) => {
     onlineUsers,
     socket,
     login,
+    signup,
     logout,
     updateProfile,
+    setGoogleSession,
   };
 
   return (

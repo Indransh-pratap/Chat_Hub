@@ -1,4 +1,5 @@
 import { useContext, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ChatContext } from "../../context/ChatContext";
 import { AuthContext } from "../../context/AuthContext";
 import { formatMessageTime } from "../lib/utils";
@@ -7,14 +8,20 @@ import { Send, Image as ImageIcon, Smile, Phone, Video, MoreVertical } from "luc
 import { motion, AnimatePresence } from "framer-motion";
 import EmojiPicker from "emoji-picker-react";
 import toast from "react-hot-toast";
+import { useUIStore } from "../lib/uiStore";
+import GameInviteCard from "./games/GameInviteCard";
 
 const ChatContainer = () => {
+  const navigate = useNavigate();
   const { messages, selectedUser, setSelectedUser, sendMessage, getMessages } = useContext(ChatContext);
-  const { authUser, onlineUsers } = useContext(AuthContext);
+  const { authUser, onlineUsers, socket } = useContext(AuthContext);
+  const { setActiveCall } = useUIStore();
 
   const scrollEnd = useRef(null);
   const [input, setInput] = useState("");
-  const [showEmoji, setShowEmoji] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const typingTimeoutRef = useRef(null);
 
   useEffect(() => {
     if (selectedUser?._id) {
@@ -22,17 +29,51 @@ const ChatContainer = () => {
     }
   }, [selectedUser]);
 
-  useEffect(() => {
+  const scrollToBottom = () => {
     scrollEnd.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  };
 
-  const handleSendMessage = async (e) => {
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isTyping]);
+
+  // SOCKET: Listen for typing events
+  useEffect(() => {
+    if (!socket || !selectedUser) return;
+
+    const handleTyping = ({ from }) => {
+      if (from === selectedUser._id) {
+        setIsTyping(true);
+        // Clear previous timeout and set a new one to turn off typing after 2 seconds
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = setTimeout(() => setIsTyping(false), 2000);
+      }
+    };
+
+    socket.on("typing", handleTyping);
+
+    return () => {
+      socket.off("typing", handleTyping);
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    };
+  }, [socket, selectedUser]);
+
+  const handleSend = async (e) => {
     e?.preventDefault();
     if (!input.trim()) return;
 
     await sendMessage({ text: input.trim() });
     setInput("");
-    setShowEmoji(false);
+    setShowEmojiPicker(false);
+  };
+
+  const handleInputChange = (e) => {
+    setInput(e.target.value);
+    
+    // Emit typing event to backend (throttled/simple)
+    if (socket && selectedUser) {
+      socket.emit("typing", { to: selectedUser._id });
+    }
   };
 
   const handleSendImage = async (e) => {
@@ -81,42 +122,41 @@ const ChatContainer = () => {
 
   return (
     <div className="h-full w-full flex flex-col glass-panel relative z-10 overflow-hidden">
-      {/* HEADER */}
-      <div className="flex items-center gap-4 px-6 py-4 border-b border-[#ff003c40] bg-black/40 backdrop-blur-md z-20">
-        <button className="md:hidden" onClick={() => setSelectedUser(null)}>
-          <img src={assets.arrow_icon} className="w-6 cursor-pointer" alt="back" />
-        </button>
-
-        <div className="relative">
-          <img
-            src={selectedUser.profilePic || assets.avatar_icon}
-            className={`w-12 h-12 rounded-full object-cover border-2 ${isUserOnline ? 'border-green-500' : 'border-gray-600'}`}
-            alt="profile"
-          />
-          {isUserOnline && (
-            <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-black shadow-[0_0_8px_#22c55e]"></span>
-          )}
-        </div>
-
-        <div className="flex-1">
-          <p className="text-white font-bold tracking-wide flex items-center gap-2">
-            {selectedUser.fullName}
-          </p>
-          <p className={`text-xs ${isUserOnline ? 'text-green-400' : 'text-gray-500'} tracking-widest uppercase`}>
-            {isUserOnline ? "Signal Acquired" : "Signal Lost"}
-          </p>
+      {/* Chat Header */}
+      <div className="h-[76px] shrink-0 border-b border-[#ffffff10] bg-[#0a0a0d] flex items-center justify-between px-4 sticky top-0 z-20 shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+        <div className="flex items-center gap-3">
+          <button className="md:hidden p-2 -ml-2 hover:bg-[#1a0005] rounded-full transition-colors text-[var(--neon-red)]" onClick={() => setSelectedUser(null)}>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <img src={selectedUser.profilePic || assets.avatar_icon} className="w-10 h-10 md:w-11 md:h-11 rounded-full object-cover border-2 border-[var(--neon-red)] shadow-[0_0_10px_rgba(255,0,60,0.3)]" alt="" />
+          <div>
+            <p className="font-bold text-white tracking-widest text-sm md:text-base">{selectedUser.fullName}</p>
+            <p className={`text-[10px] md:text-xs ${isUserOnline ? 'text-green-400' : 'text-gray-500'} uppercase tracking-wider font-semibold`}>
+              {isUserOnline ? "Signal Acquired" : "Signal Lost"}
+            </p>
+          </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-4 text-[var(--neon-red)]">
-          <button className="hover:text-white hover:drop-shadow-[0_0_8px_white] transition-colors p-2 rounded-full hover:bg-white/10" title="Secure Voice Comm">
-            <Phone className="w-5 h-5" />
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => setActiveCall({ remoteUserId: selectedUser._id, isReceiver: false })}
+            className="hover:text-white hover:drop-shadow-[0_0_8px_white] transition-colors p-2 rounded-full hover:bg-white/10" 
+            title="Secure Voice Comm"
+          >
+            <Phone className="w-5 h-5 text-gray-300" />
           </button>
-          <button className="hover:text-white hover:drop-shadow-[0_0_8px_white] transition-colors p-2 rounded-full hover:bg-white/10" title="Encrypted Video Link">
-            <Video className="w-5 h-5" />
+          <button 
+            onClick={() => setActiveCall({ remoteUserId: selectedUser._id, isReceiver: false })}
+            className="hover:text-white hover:drop-shadow-[0_0_8px_white] transition-colors p-2 rounded-full hover:bg-white/10" 
+            title="Encrypted Video Link"
+          >
+            <Video className="w-5 h-5 text-gray-300" />
           </button>
           <button className="hover:text-white hover:drop-shadow-[0_0_8px_white] transition-colors p-2 rounded-full hover:bg-white/10" title="Options">
-            <MoreVertical className="w-5 h-5" />
+            <MoreVertical className="w-5 h-5 text-gray-300" />
           </button>
         </div>
       </div>
@@ -125,7 +165,7 @@ const ChatContainer = () => {
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6 custom-scrollbar relative z-10">
         {messages.length === 0 && (
           <div className="flex h-full items-center justify-center">
-            <p className="text-center text-gray-500 tracking-widest text-sm bg-black/50 px-6 py-2 rounded-full border border-gray-800">
+            <p className="text-center text-gray-500 tracking-widest text-sm bg-[#0a0a0d] px-6 py-2 rounded-full border border-gray-800">
               SECURE CHANNEL ESTABLISHED. NO MESSAGES YET.
             </p>
           </div>
@@ -154,22 +194,43 @@ const ChatContainer = () => {
                     <img src={msg.image} className="rounded-lg object-cover max-h-60 mb-2 cursor-pointer hover:opacity-90 transition-opacity" alt="attachment" />
                   ) : null}
                   
-                  {msg.text && <p className="leading-relaxed">{msg.text}</p>}
+                  {msg.text && msg.type !== 'game-invite' && msg.type !== 'game_invite' && <p className="leading-relaxed">{msg.text}</p>}
+
+                  {(msg.type === 'game-invite' || msg.type === 'game_invite') && (
+                    <GameInviteCard message={msg} />
+                  )}
 
                   <div className={`text-[10px] mt-2 flex items-center gap-1 ${isMine ? "text-red-300 justify-end" : "text-gray-500 justify-start"}`}>
                     {formatMessageTime(msg.createdAt)}
-                    {isMine && <span className="ml-1 text-[var(--neon-red)]">✓✓</span>}
+                    {isMine && (
+                      <span className={`ml-1 ${msg.seen ? 'text-green-400 drop-shadow-[0_0_5px_#22c55e]' : 'text-gray-400'}`}>✓✓</span>
+                    )}
                   </div>
                 </div>
               </motion.div>
             );
           })}
         </AnimatePresence>
-        <div ref={scrollEnd}></div>
+          
+        {isTyping && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            className="flex justify-start max-w-[85%] mb-4"
+          >
+            <div className="px-4 py-3 rounded-2xl bg-[#121217] border border-gray-800 rounded-bl-sm flex gap-1 items-center shadow-lg">
+              <span className="w-2 h-2 bg-[var(--neon-red)] rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+              <span className="w-2 h-2 bg-[var(--neon-red)] rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+              <span className="w-2 h-2 bg-[var(--neon-red)] rounded-full animate-bounce"></span>
+            </div>
+          </motion.div>
+        )}
+
+        <div ref={scrollEnd} />
       </div>
 
       {/* Emoji Picker Popover */}
-      {showEmoji && (
+      {showEmojiPicker && (
         <div className="absolute bottom-24 left-6 z-50 shadow-[0_0_20px_rgba(255,0,60,0.2)] rounded-lg overflow-hidden border border-[var(--neon-red)]">
           <EmojiPicker 
             onEmojiClick={onEmojiClick}
@@ -179,26 +240,23 @@ const ChatContainer = () => {
         </div>
       )}
 
-      {/* INPUT AREA */}
-      <div className="px-6 py-4 bg-black/60 backdrop-blur-md border-t border-[#ff003c40] z-20">
-        <form
-          onSubmit={handleSendMessage}
-          className="flex items-center gap-3 bg-[var(--bg-panel)] border border-[var(--neon-red)] rounded-full px-4 py-2 shadow-[0_0_10px_rgba(255,0,60,0.1)] focus-within:shadow-[0_0_15px_rgba(255,0,60,0.4)] transition-all"
-        >
+      {/* Message Input Area */}
+      <div className="p-3 md:p-4 bg-[#0a0a0d] border-t border-[#ffffff10] sticky bottom-0 z-30 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
+        <form onSubmit={handleSend} className="flex items-center gap-2 md:gap-3 bg-[#121217] p-1 md:p-2 rounded-xl border border-gray-800 focus-within:border-[var(--neon-red)] focus-within:shadow-[0_0_15px_rgba(255,0,60,0.1)] transition-all">
           <button 
             type="button" 
-            onClick={() => setShowEmoji(!showEmoji)}
-            className="text-gray-400 hover:text-[var(--neon-red)] transition-colors p-1"
+            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            className="p-2 md:p-3 text-gray-400 hover:text-[var(--neon-red)] transition-colors"
           >
-            <Smile className="w-5 h-5" />
+            <Smile className="w-5 h-5 md:w-6 md:h-6" />
           </button>
 
           <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
             type="text"
-            placeholder="Transmit data..."
-            className="flex-1 bg-transparent text-white border-none outline-none placeholder-gray-600 text-sm px-2"
+            value={input}
+            onChange={handleInputChange}
+            className="flex-1 bg-transparent text-white placeholder-gray-500 focus:outline-none px-2 tracking-wide text-sm md:text-base selection:bg-[var(--neon-red)] selection:text-white"
+            placeholder="Encrypting outgoing transmission..."
           />
 
           <input

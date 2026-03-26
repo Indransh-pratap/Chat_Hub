@@ -78,7 +78,7 @@ export const markMessageAsSEEN = async (req, res) => {
 
 export const sendMessage = async (req, res) => {
   try {
-    const { text, image } = req.body; 
+    const { text, image, type, gameId } = req.body; 
     const receiverId = req.params.id;
     const senderId = req.user._id; // senderID -> senderId fix
 
@@ -94,6 +94,8 @@ export const sendMessage = async (req, res) => {
       receiverId,
       text,
       image: imageUrl,
+      type: type || 'text',
+      gameId: gameId,
     });
     // emit the new message to receiver's socket
 
@@ -103,6 +105,42 @@ export const sendMessage = async (req, res) => {
     }
 
     res.json({ success: true, newMessage });
+  } catch (error) {
+    console.log(error.message);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+// Update message status (e.g., for game invites)
+export const updateMessageStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const updatedMessage = await Message.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true }
+    );
+
+    if (!updatedMessage) {
+      return res.json({ success: false, message: "Message not found" });
+    }
+
+    // Emit socket event to notify other user about status change
+    const targetId = updatedMessage.senderId.toString() === req.user._id.toString() 
+      ? updatedMessage.receiverId 
+      : updatedMessage.senderId;
+      
+    const targetSocketId = userSocketMap[targetId];
+    if (targetSocketId) {
+      io.to(targetSocketId).emit("messageStatusUpdate", {
+        messageId: id,
+        status,
+      });
+    }
+
+    res.json({ success: true, message: updatedMessage });
   } catch (error) {
     console.log(error.message);
     res.json({ success: false, message: error.message });

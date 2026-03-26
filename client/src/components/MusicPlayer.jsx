@@ -16,7 +16,7 @@ const MusicPlayer = () => {
       onMouseLeave={() => setIsHovered(false)}
       className="absolute bottom-6 left-6 z-40 glass-panel border border-[var(--neon-red)] rounded-2xl p-4 flex items-center gap-4 shadow-[0_0_20px_rgba(255,0,60,0.15)] overflow-hidden w-[300px]"
     >
-      <div className="absolute inset-0 bg-red-900/10 mix-blend-overlay pointer-events-none"></div>
+      <div className="absolute inset-0 bg-[#0a0a0d] mix-blend-overlay pointer-events-none"></div>
 
       {/* Album Art Placeholder */}
       <div className="relative w-12 h-12 rounded-lg bg-black border border-gray-800 flex items-center justify-center shrink-0 overflow-hidden shadow-[0_0_10px_var(--neon-red)]">
