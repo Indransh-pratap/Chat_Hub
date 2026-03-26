@@ -11,7 +11,7 @@ import {
 
 import { protectRoutes } from "../middleware/auth.js";
 
-const userRouter = express.Router();
+const userroutes = express.Router();
 
 // ================= NORMAL AUTH =================
 userRouter.post("/signup", signup);
@@ -44,4 +44,4 @@ userRouter.get(
   }
 );
 
-export default userRouter;
+export default userroutes;
