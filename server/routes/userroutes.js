@@ -7,7 +7,7 @@ import {
   signup,
   updateProfile,
   check,
-} from "../controllers/userController.js";
+} from "../controllers/usercontroller.js";
 
 import { protectRoutes } from "../middleware/auth.js";
 
