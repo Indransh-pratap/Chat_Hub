@@ -1,6 +1,7 @@
 import { useContext, useState } from "react";
 import assets from "../assets/assets";
 import { AuthContext } from "../../context/AuthContext";
+import NeonLogo from "../components/common/NeonLogo";
 
 const LoginPage = () => {
   const [currState, setCurrState] = useState("Sign up");
@@ -45,11 +46,7 @@ const LoginPage = () => {
     <div className="min-h-screen bg-[var(--bg-dark)] flex items-center justify-center gap-8 sm:justify-evenly max-sm:flex-col">
 
       {/* Left */}
-      <img
-        src={assets.logo_big}
-        alt="logo"
-        className="w-[min(30vw,250px)]"
-      />
+      <NeonLogo className="mb-8 lg:mb-0 scale-75 lg:scale-100" />
 
       {/* Right */}
       <form

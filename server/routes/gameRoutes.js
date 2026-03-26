@@ -1,10 +1,10 @@
 import express from "express";
-import { protectRoute } from "../middleware/authMiddleware.js";
+import { protectRoutes } from "../middleware/auth.js";
 import { saveGameResult, getGameStats } from "../controllers/gameController.js";
 
 const router = express.Router();
 
-router.post("/save", protectRoute, saveGameResult);
-router.get("/stats/:userId", protectRoute, getGameStats);
+router.post("/save", protectRoutes, saveGameResult);
+router.get("/stats/:userId", protectRoutes, getGameStats);
 
 export default router;
