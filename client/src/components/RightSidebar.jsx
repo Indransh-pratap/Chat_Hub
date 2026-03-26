@@ -2,14 +2,15 @@ import { useContext, useEffect, useState } from "react";
 import assets from "../assets/assets";
 import { ChatContext } from "../../context/ChatContext";
 import { AuthContext } from "../../context/AuthContext";
+import { motion } from "framer-motion";
+import { X, Images, Fingerprint, Activity } from "lucide-react";
 
-const RightSidebar = () => {
+const RightSidebar = ({ setShowRightSidebar }) => {
   const { selectedUser, messages } = useContext(ChatContext);
-  const { logout, onlineUsers } = useContext(AuthContext);
+  const { onlineUsers } = useContext(AuthContext);
 
   const [msgImages, setMsgImages] = useState([]);
 
-  // ================= GET ALL IMAGES FROM MESSAGES =================
   useEffect(() => {
     if (!messages || messages.length === 0) {
       setMsgImages([]);
@@ -17,81 +18,115 @@ const RightSidebar = () => {
     }
 
     const imgs = messages
-      .filter((msg) => msg.image)          // only messages with image
-      .map((msg) => msg.image);            // store direct image url/base64
+      .filter((msg) => msg.image)
+      .map((msg) => msg.image);
 
     setMsgImages(imgs);
-  }, [messages]);   // 🔥 dependency added
+  }, [messages]);
 
   if (!selectedUser) return null;
 
-  const isOnline =
-    Array.isArray(onlineUsers) &&
-    onlineUsers.includes(selectedUser._id);
+  const isOnline = Array.isArray(onlineUsers) && onlineUsers.includes(selectedUser._id);
 
   return (
-    <div className="bg-[#8185B2]/10 text-white w-full h-full relative overflow-y-auto max-md:hidden">
-
-      {/* -------- USER INFO -------- */}
-      <div className="pt-16 flex flex-col items-center gap-2 text-xs font-light mx-auto">
-        <img
-          src={selectedUser.profilePic || assets.avatar_icon}
-          alt="profile"
-          className="w-20 h-20 rounded-full object-cover ring-2 ring-violet-500/40"
-        />
-
-        <h1 className="px-6 text-xl font-medium mx-auto flex items-center gap-2">
-          {isOnline && <span className="w-2 h-2 rounded-full bg-green-500"></span>}
-          {selectedUser.fullName || "Unnamed User"}
-        </h1>
-
-        {selectedUser.bio && (
-          <p className="px-8 mx-auto text-center text-gray-300">
-            {selectedUser.bio}
-          </p>
-        )}
+    <motion.div 
+      initial={{ x: 300, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      exit={{ x: 300, opacity: 0 }}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      className="bg-[var(--bg-panel)] backdrop-blur-md text-white w-full h-full relative flex flex-col max-md:hidden custom-scrollbar overflow-y-auto"
+    >
+      {/* 🔴 HIDE BUTTON */}
+      <div className="absolute top-4 right-4 z-10">
+        <button
+          onClick={() => setShowRightSidebar(false)}
+          className="text-gray-400 hover:text-[var(--neon-red)] transition-colors p-1 rounded-full hover:bg-white/5"
+          title="Close Dossier"
+        >
+          <X className="w-5 h-5" />
+        </button>
       </div>
 
-      <hr className="border-[#ffffff30] my-5" />
+      <div className="p-6 pb-2">
+        <h2 className="text-sm uppercase tracking-widest text-[var(--neon-red)] font-semibold flex items-center gap-2 drop-shadow-[0_0_8px_var(--neon-red)]">
+          <Fingerprint className="w-4 h-4" /> Subject Dossier
+        </h2>
+      </div>
 
-      {/* -------- MEDIA GALLERY -------- */}
-      <div className="px-5 text-xs">
-        <p className="font-medium mb-3">Media</p>
+      {/* -------- USER INFO -------- */}
+      <div className="flex flex-col items-center gap-4 mt-6 mx-auto w-full px-6">
+        <div className="relative group">
+          <img
+            src={selectedUser.profilePic || assets.avatar_icon}
+            alt="profile"
+            className="w-28 h-28 rounded-full object-cover ring-4 ring-[#1a1014] border-2 border-[var(--neon-red)] shadow-[0_0_20px_rgba(255,0,60,0.3)] transition-transform duration-500 group-hover:scale-105"
+          />
+          {isOnline && (
+            <div className="absolute bottom-1 right-1 w-6 h-6 bg-green-500 rounded-full border-4 border-[#1a1014] shadow-[0_0_10px_#22c55e] flex items-center justify-center">
+              <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+            </div>
+          )}
+        </div>
 
-        {msgImages.length === 0 ? (
-          <p className="text-gray-400 text-center text-sm">
-            No media shared yet
-          </p>
-        ) : (
-          <div className="max-h-[220px] overflow-y-auto grid grid-cols-2 gap-4 pr-2">
-            {msgImages.map((img, index) => (
-              <div
-                key={index}
-                className="cursor-pointer rounded overflow-hidden hover:scale-105 transition"
-                onClick={() => window.open(img, "_blank")}
-              >
-                <img
-                  src={img}
-                  alt="media"
-                  className="h-24 w-full object-cover rounded-md"
-                />
-              </div>
-            ))}
+        <div className="text-center w-full">
+          <h1 className="text-2xl font-bold tracking-wider text-white flex justify-center items-center gap-2">
+            {selectedUser.fullName || "UNKNOWN SUBJECT"}
+          </h1>
+          <div className="inline-flex items-center gap-1 mt-1 px-3 py-1 rounded-full bg-black/40 border border-gray-800">
+            <Activity className={`w-3 h-3 ${isOnline ? "text-green-500" : "text-gray-500"}`} />
+            <span className={`text-[10px] uppercase font-bold tracking-widest ${isOnline ? "text-green-400" : "text-gray-500"}`}>
+              {isOnline ? "Active Signal" : "Signal Dropped"}
+            </span>
+          </div>
+        </div>
+
+        {selectedUser.bio && (
+          <div className="w-full bg-black/30 border border-[#ff003c20] rounded-xl p-4 mt-2">
+            <p className="text-xs text-[var(--neon-red)] uppercase tracking-wider mb-2 font-semibold">Decrypted Bio</p>
+            <p className="text-sm text-gray-300 leading-relaxed font-light">
+              "{selectedUser.bio}"
+            </p>
           </div>
         )}
       </div>
 
-      {/* -------- LOGOUT BUTTON -------- */}
-      <button
-        onClick={logout}
-        className="absolute bottom-6 left-1/2 transform -translate-x-1/2
-        bg-gradient-to-r from-purple-400 to-violet-600 text-white
-        border-none text-sm font-medium py-2 px-20 rounded-full cursor-pointer
-        hover:scale-105 transition shadow-lg"
-      >
-        Logout
-      </button>
-    </div>
+      {/* -------- MEDIA GALLERY -------- */}
+      <div className="px-6 mt-8 flex-1">
+        <div className="flex items-center gap-2 mb-4 border-b border-[#ff003c20] pb-2">
+          <Images className="w-4 h-4 text-[var(--neon-red)]" />
+          <p className="text-xs uppercase tracking-widest text-[var(--neon-red)] font-semibold">Intercepted Media</p>
+          <span className="ml-auto text-xs bg-[var(--neon-red)] text-white px-2 py-0.5 rounded-full font-bold">
+            {msgImages.length}
+          </span>
+        </div>
+
+        {msgImages.length === 0 ? (
+          <div className="bg-black/20 border border-dashed border-gray-800 rounded-xl p-6 text-center">
+            <p className="text-gray-500 text-xs tracking-widest uppercase">No Visual Data</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 pb-6">
+            {msgImages.map((img, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.1 }}
+                className="cursor-pointer rounded-lg overflow-hidden border border-transparent hover:border-[var(--neon-red)] transition-all shadow-md hover:shadow-[0_0_15px_rgba(255,0,60,0.3)] relative group aspect-square"
+                onClick={() => window.open(img, "_blank")}
+              >
+                <div className="absolute inset-0 bg-[var(--neon-red)] mix-blend-overlay opacity-0 group-hover:opacity-30 transition-opacity z-10 pointer-events-none"></div>
+                <img
+                  src={img}
+                  alt="media intercept"
+                  className="w-full h-full object-cover"
+                />
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </div>
+    </motion.div>
   );
 };
 

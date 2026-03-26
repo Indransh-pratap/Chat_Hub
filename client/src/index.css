@@ -1,28 +1,36 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
+:root {
+  --neon-red: #ff003c;
+  --dark-red: #8b001a;
+  --bg-dark: #050505;
+  --bg-panel: rgba(20, 10, 15, 0.6);
+  --border-neon: rgba(255, 0, 60, 0.4);
+}
+
 * {
-  font-family: "Outfit", sans-serif;
+  font-family: "Space Grotesk", sans-serif;
   box-sizing: border-box;
 }
 
-/* 🔥 FULL SCROLL CONTROL */
 html, body, #root {
   height: 100%;
   width: 100%;
   margin: 0;
   padding: 0;
   overflow: hidden;
+  background-color: var(--bg-dark);
+  color: #e0e0e0;
 }
 
-/* 🔥 REMOVE BROWSER SCROLLBAR SPACE */
 body {
   overscroll-behavior: none;
 }
 
-/* 🔥 HIDE SCROLLBAR VISUALLY (BUT KEEP FUNCTIONAL IN CHAT) */
+/* Custom Scrollbar for Neon Theme */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -30,6 +38,48 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: var(--dark-red);
   border-radius: 10px;
+  border: 1px solid var(--neon-red);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--neon-red);
+}
+
+/* Glow Utilities */
+.neon-text {
+  color: #fff;
+  text-shadow: 0 0 5px var(--neon-red), 0 0 10px var(--neon-red), 0 0 20px var(--dark-red);
+}
+
+.neon-border {
+  border: 1px solid var(--neon-red);
+  box-shadow: 0 0 10px rgba(255, 0, 60, 0.3), inset 0 0 10px rgba(255, 0, 60, 0.2);
+}
+
+.glass-panel {
+  background: var(--bg-panel);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Scanline / CRT effect overlay */
+.scanlines::before {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(18, 16, 16, 0) 50%,
+    rgba(0, 0, 0, 0.25) 50%
+  );
+  background-size: 100% 4px;
+  z-index: 50;
+  pointer-events: none;
 }

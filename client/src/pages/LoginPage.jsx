@@ -11,17 +11,23 @@ const LoginPage = () => {
   const [isDataSubmitted, setIsDataSubmitted] = useState(false);
   const [agree, setAgree] = useState(false);
 
-  const{login} = useContext(AuthContext)
+  const { login } = useContext(AuthContext);
 
   const onsubmithandler = (e) => {
     e.preventDefault();
 
+    // Step 1 of signup (name, email, password)
     if (currState === "Sign up" && !isDataSubmitted) {
       setIsDataSubmitted(true);
       return;
     }
-login(currState=== "Sign up"? 'signup': 'login',{fullName,email,password,bio})
 
+    // Final submit
+    if (currState === "Sign up") {
+      login("signup", { fullName, email, password, bio });
+    } else {
+      login("login", { email, password }); // 🔴 ONLY email + password
+    }
   };
 
   return (
@@ -43,14 +49,14 @@ login(currState=== "Sign up"? 'signup': 'login',{fullName,email,password,bio})
         {/* Header */}
         <h2 className="font-medium text-2xl flex justify-between items-center">
           {currState}
-        
+
           <img
             src={assets.arrow_icon}
             alt="toggle"
             className="w-5 cursor-pointer"
             onClick={() => {
               setCurrState(currState === "Sign up" ? "Login" : "Sign up");
-              setIsDataSubmitted(false);
+              setIsDataSubmitted(false);   // 🔴 always reset
             }}
           />
         </h2>
@@ -128,7 +134,7 @@ login(currState=== "Sign up"? 'signup': 'login',{fullName,email,password,bio})
           {currState === "Sign up" ? "Create Account" : "Login"}
         </button>
 
-        {/* Bottom Text (FIXED, SAME STYLE) */}
+        {/* Bottom Toggle */}
         <div className="flex flex-col gap-2 text-sm text-gray-400">
           {currState === "Sign up" ? (
             <p>
@@ -137,7 +143,7 @@ login(currState=== "Sign up"? 'signup': 'login',{fullName,email,password,bio})
                 className="cursor-pointer underline"
                 onClick={() => {
                   setCurrState("Login");
-                  setIsDataSubmitted(false);
+                  setIsDataSubmitted(false); // 🔴 reset here also
                 }}
               >
                 Login here
@@ -150,7 +156,7 @@ login(currState=== "Sign up"? 'signup': 'login',{fullName,email,password,bio})
                 className="cursor-pointer underline"
                 onClick={() => {
                   setCurrState("Sign up");
-                  setIsDataSubmitted(false);
+                  setIsDataSubmitted(false); // 🔴 reset here also
                 }}
               >
                 Click here

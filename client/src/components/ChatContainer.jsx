@@ -1,43 +1,48 @@
 import { useContext, useEffect, useRef, useState } from "react";
-import assets from "../assets/assets";
-import { formatMessageTime } from "../lib/utils";
 import { ChatContext } from "../../context/ChatContext";
 import { AuthContext } from "../../context/AuthContext";
+import { formatMessageTime } from "../lib/utils";
+import assets from "../assets/assets";
+import { Send, Image as ImageIcon, Smile, Phone, Video, MoreVertical } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import EmojiPicker from "emoji-picker-react";
 import toast from "react-hot-toast";
 
 const ChatContainer = () => {
-  const {
-    messages,
-    selectedUser,
-    setSelectedUser,
-    sendMessage,
-    getMessages,
-  } = useContext(ChatContext);
-
+  const { messages, selectedUser, setSelectedUser, sendMessage, getMessages } = useContext(ChatContext);
   const { authUser, onlineUsers } = useContext(AuthContext);
 
   const scrollEnd = useRef(null);
   const [input, setInput] = useState("");
+  const [showEmoji, setShowEmoji] = useState(false);
 
-  // SEND TEXT
+  useEffect(() => {
+    if (selectedUser?._id) {
+      getMessages(selectedUser._id);
+    }
+  }, [selectedUser]);
+
+  useEffect(() => {
+    scrollEnd.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
   const handleSendMessage = async (e) => {
-    e.preventDefault();
+    e?.preventDefault();
     if (!input.trim()) return;
+
     await sendMessage({ text: input.trim() });
     setInput("");
+    setShowEmoji(false);
   };
 
-  // SEND IMAGE
   const handleSendImage = async (e) => {
     const file = e.target.files[0];
-
     if (!file || !file.type.startsWith("image/")) {
-      toast.error("Select a valid image file");
+      toast.error("Invalid image format");
       return;
     }
-
     if (file.size > 2 * 1024 * 1024) {
-      toast.error("Image too large (max 2MB)");
+      toast.error("Max 2MB allowed");
       return;
     }
 
@@ -46,175 +51,177 @@ const ChatContainer = () => {
       await sendMessage({ image: reader.result });
       e.target.value = "";
     };
-
     reader.readAsDataURL(file);
   };
 
-  // LOAD MESSAGES
-  useEffect(() => {
-    if (selectedUser?._id) {
-      getMessages(selectedUser._id);
-    }
-  }, [selectedUser]);
+  const onEmojiClick = (emojiObject) => {
+    setInput((prev) => prev + emojiObject.emoji);
+  };
 
-  // AUTO SCROLL
-  useEffect(() => {
-    if (scrollEnd.current) {
-      scrollEnd.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages]);
+  if (!selectedUser) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center text-gray-400 glass-panel">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="text-center"
+        >
+          <div className="w-24 h-24 rounded-full border border-[var(--neon-red)] flex items-center justify-center mx-auto mb-4 shadow-[0_0_20px_rgba(255,0,60,0.3)]">
+            <span className="text-4xl">📡</span>
+          </div>
+          <p className="text-xl font-medium text-[var(--neon-red)] neon-text tracking-widest">AWAITING CONNECTION</p>
+          <p className="text-sm mt-2">Select an operative from the directory to establish a secure link.</p>
+        </motion.div>
+      </div>
+    );
+  }
 
-  const isUserOnline =
-    Array.isArray(onlineUsers) &&
-    onlineUsers.includes(selectedUser?._id);
+  const isUserOnline = Array.isArray(onlineUsers) && onlineUsers.includes(selectedUser?._id);
 
-  return selectedUser ? (
-    <div className="h-full w-full flex flex-col bg-gradient-to-br from-[#0f0f1a] via-[#151529] to-[#0b0b14]">
-
+  return (
+    <div className="h-full w-full flex flex-col glass-panel relative z-10 overflow-hidden">
       {/* HEADER */}
-      <div className="shrink-0 flex items-center gap-4 px-6 py-4 border-b border-white/10 backdrop-blur-xl bg-white/5">
-        <img
-          src={selectedUser.profilePic || assets.avatar_icon}
-          alt=""
-          className="w-10 h-10 rounded-full object-cover ring-2 ring-violet-500/40"
-        />
+      <div className="flex items-center gap-4 px-6 py-4 border-b border-[#ff003c40] bg-black/40 backdrop-blur-md z-20">
+        <button className="md:hidden" onClick={() => setSelectedUser(null)}>
+          <img src={assets.arrow_icon} className="w-6 cursor-pointer" alt="back" />
+        </button>
+
+        <div className="relative">
+          <img
+            src={selectedUser.profilePic || assets.avatar_icon}
+            className={`w-12 h-12 rounded-full object-cover border-2 ${isUserOnline ? 'border-green-500' : 'border-gray-600'}`}
+            alt="profile"
+          />
+          {isUserOnline && (
+            <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-black shadow-[0_0_8px_#22c55e]"></span>
+          )}
+        </div>
 
         <div className="flex-1">
-          <p className="text-white font-semibold flex items-center gap-2 tracking-wide">
-            {selectedUser.fullName || "Unknown User"}
-            {isUserOnline && (
-              <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
-            )}
+          <p className="text-white font-bold tracking-wide flex items-center gap-2">
+            {selectedUser.fullName}
           </p>
-          <p className="text-xs text-gray-400">
-            {isUserOnline ? "Online now" : "Offline"}
+          <p className={`text-xs ${isUserOnline ? 'text-green-400' : 'text-gray-500'} tracking-widest uppercase`}>
+            {isUserOnline ? "Signal Acquired" : "Signal Lost"}
           </p>
         </div>
 
-        <img
-          onClick={() => setSelectedUser(null)}
-          src={assets.arrow_icon}
-          alt="back"
-          className="md:hidden w-7 cursor-pointer opacity-80 hover:opacity-100 transition"
-        />
+        {/* Action Buttons */}
+        <div className="flex items-center gap-4 text-[var(--neon-red)]">
+          <button className="hover:text-white hover:drop-shadow-[0_0_8px_white] transition-colors p-2 rounded-full hover:bg-white/10" title="Secure Voice Comm">
+            <Phone className="w-5 h-5" />
+          </button>
+          <button className="hover:text-white hover:drop-shadow-[0_0_8px_white] transition-colors p-2 rounded-full hover:bg-white/10" title="Encrypted Video Link">
+            <Video className="w-5 h-5" />
+          </button>
+          <button className="hover:text-white hover:drop-shadow-[0_0_8px_white] transition-colors p-2 rounded-full hover:bg-white/10" title="Options">
+            <MoreVertical className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       {/* CHAT AREA */}
-      <div className="flex-1 w-full overflow-y-auto px-10 py-6 space-y-4">
-
+      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6 custom-scrollbar relative z-10">
         {messages.length === 0 && (
-          <p className="text-center text-gray-400 text-sm mt-10">
-            No messages yet. Say hi 👋
-          </p>
+          <div className="flex h-full items-center justify-center">
+            <p className="text-center text-gray-500 tracking-widest text-sm bg-black/50 px-6 py-2 rounded-full border border-gray-800">
+              SECURE CHANNEL ESTABLISHED. NO MESSAGES YET.
+            </p>
+          </div>
         )}
 
-        {messages.map((msg) => {
-          const isMine = msg.senderId === authUser._id;
+        <AnimatePresence>
+          {messages.map((msg) => {
+            const isMine = msg.senderId === authUser._id;
 
-          return (
-            <div
-              key={msg._id}
-              className={`w-full flex ${
-                isMine ? "justify-end" : "justify-start"
-              }`}
-            >
-              {/* MESSAGE WRAPPER */}
-              <div
-                className={`flex items-end gap-3 max-w-[75%] ${
-                  isMine ? "flex-row" : "flex-row-reverse"
-                }`}
+            return (
+              <motion.div
+                key={msg._id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                layout
+                className={`flex ${isMine ? "justify-end" : "justify-start"}`}
               >
-                {/* MESSAGE */}
-                {msg.image ? (
-                  <img
-                    src={msg.image}
-                    alt="sent"
-                    className="max-w-full rounded-2xl border border-white/10 shadow-lg"
-                  />
-                ) : (
-                  <p
-                    className={`px-4 py-2.5 text-sm rounded-2xl break-words shadow-md ${
-                      isMine
-                        ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-br-md"
-                        : "bg-white/10 text-white rounded-bl-md"
-                    }`}
-                  >
-                    {msg.text}
-                  </p>
-                )}
+                <div
+                  className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm relative group ${
+                    isMine
+                      ? "bg-gradient-to-br from-red-900 to-[#4a0011] text-white border border-[var(--neon-red)] shadow-[0_0_15px_rgba(255,0,60,0.15)] rounded-tr-sm"
+                      : "bg-[#1a1a24] text-gray-100 border border-gray-700 rounded-tl-sm shadow-lg"
+                  }`}
+                >
+                  {msg.image ? (
+                    <img src={msg.image} className="rounded-lg object-cover max-h-60 mb-2 cursor-pointer hover:opacity-90 transition-opacity" alt="attachment" />
+                  ) : null}
+                  
+                  {msg.text && <p className="leading-relaxed">{msg.text}</p>}
 
-                {/* AVATAR + TIME */}
-                <div className="flex flex-col items-center text-[10px] text-gray-400">
-                  <img
-                    src={
-                      isMine
-                        ? authUser.profilePic || assets.avatar_icon
-                        : selectedUser.profilePic || assets.avatar_icon
-                    }
-                    alt=""
-                    className="w-8 h-8 rounded-full object-cover mb-1"
-                  />
-                  {formatMessageTime(msg.createdAt)}
+                  <div className={`text-[10px] mt-2 flex items-center gap-1 ${isMine ? "text-red-300 justify-end" : "text-gray-500 justify-start"}`}>
+                    {formatMessageTime(msg.createdAt)}
+                    {isMine && <span className="ml-1 text-[var(--neon-red)]">✓✓</span>}
+                  </div>
                 </div>
-              </div>
-            </div>
-          );
-        })}
-
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
         <div ref={scrollEnd}></div>
       </div>
 
-      {/* INPUT */}
-      <form
-        onSubmit={handleSendMessage}
-        className="shrink-0 px-6 py-4 flex items-center gap-3 border-t border-white/10 backdrop-blur-xl bg-white/5"
-      >
-        <div className="flex-1 flex items-center bg-white/10 rounded-full px-4 py-2">
+      {/* Emoji Picker Popover */}
+      {showEmoji && (
+        <div className="absolute bottom-24 left-6 z-50 shadow-[0_0_20px_rgba(255,0,60,0.2)] rounded-lg overflow-hidden border border-[var(--neon-red)]">
+          <EmojiPicker 
+            onEmojiClick={onEmojiClick}
+            theme="dark"
+            previewConfig={{ showPreview: false }}
+          />
+        </div>
+      )}
+
+      {/* INPUT AREA */}
+      <div className="px-6 py-4 bg-black/60 backdrop-blur-md border-t border-[#ff003c40] z-20">
+        <form
+          onSubmit={handleSendMessage}
+          className="flex items-center gap-3 bg-[var(--bg-panel)] border border-[var(--neon-red)] rounded-full px-4 py-2 shadow-[0_0_10px_rgba(255,0,60,0.1)] focus-within:shadow-[0_0_15px_rgba(255,0,60,0.4)] transition-all"
+        >
+          <button 
+            type="button" 
+            onClick={() => setShowEmoji(!showEmoji)}
+            className="text-gray-400 hover:text-[var(--neon-red)] transition-colors p-1"
+          >
+            <Smile className="w-5 h-5" />
+          </button>
+
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             type="text"
-            placeholder="Type a message..."
-            className="flex-1 text-sm bg-transparent outline-none text-white placeholder-gray-400"
+            placeholder="Transmit data..."
+            className="flex-1 bg-transparent text-white border-none outline-none placeholder-gray-600 text-sm px-2"
           />
 
           <input
             onChange={handleSendImage}
             type="file"
             id="image"
-            accept="image/png,image/jpeg"
+            accept="image/png,image/jpeg,image/webp"
             hidden
           />
 
-          <label htmlFor="image">
-            <img
-              src={assets.gallery_icon}
-              alt="gallery"
-              className="w-5 cursor-pointer opacity-70 hover:opacity-100 transition"
-            />
+          <label htmlFor="image" className="cursor-pointer text-gray-400 hover:text-[var(--neon-red)] transition-colors p-1">
+            <ImageIcon className="w-5 h-5" />
           </label>
-        </div>
 
-        <button type="submit">
-          <div className="w-11 h-11 flex items-center justify-center rounded-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:scale-105 transition shadow-lg">
-            <img
-              src={assets.send_button}
-              alt="send"
-              className="w-5 invert"
-            />
-          </div>
-        </button>
-      </form>
-    </div>
-  ) : (
-    <div className="h-full flex flex-col items-center justify-center gap-4 text-gray-400 bg-gradient-to-br from-[#0f0f1a] to-[#0b0b14] max-md:hidden">
-      <img src={assets.logo_icon} className="w-20 opacity-80" alt="" />
-      <p className="text-xl font-semibold text-white">
-        Chat anytime, anywhere
-      </p>
-      <p className="text-sm text-gray-400">
-        Select a user to start chatting
-      </p>
+          <button
+            type="submit"
+            disabled={!input.trim()}
+            className="bg-[var(--neon-red)] text-white p-2 rounded-full hover:bg-white hover:text-[var(--dark-red)] transition-all shadow-[0_0_10px_var(--neon-red)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[var(--neon-red)] disabled:hover:text-white"
+          >
+            <Send className="w-4 h-4" />
+          </button>
+        </form>
+      </div>
     </div>
   );
 };

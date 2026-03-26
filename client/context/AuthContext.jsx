@@ -5,10 +5,11 @@ import { io } from "socket.io-client";
 
 export const AuthContext = createContext();
 
-// 🔴 IMPORTANT: Backend URL from env
+// Backend URL
 const backendURL = import.meta.env.VITE_BACKEND_URL;
+console.log("Backend URL from env:", backendURL);
 
-// 🔴 Create axios instance (better than global defaults)
+// Axios instance
 const api = axios.create({
   baseURL: backendURL,
   withCredentials: true,
@@ -31,19 +32,17 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       console.log("Check auth error:", error);
-      // Silent fail is better here
     }
   };
 
   // ================= LOGIN / SIGNUP =================
-  const login = async (state, credentials) => {
+  const login = async (type, credentials) => {
     try {
-      const { data } = await api.post(`/api/auth/${state}`, credentials);
+      const { data } = await api.post(`/api/auth/${type}`, credentials);
 
       if (data.success) {
         setAuthUser(data.userData);
 
-        // 🔴 Set token in header
         api.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
 
         setToken(data.token);
@@ -128,7 +127,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const value = {
-    axios: api,          // 🔴 use this everywhere, not default axios
+    axios: api,
     authUser,
     onlineUsers,
     socket,
