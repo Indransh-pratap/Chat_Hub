@@ -1,6 +1,6 @@
 import express from "express";
 import { protectRoutes } from "../middleware/auth.js";
-import { saveGameResult, getGameStats } from "../controllers/gameController.js";
+import { saveGameResult, getGameStats } from "../controllers/gamecontroller.js";
 
 const router = express.Router();
 
