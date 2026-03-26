@@ -7,11 +7,11 @@ import {
   signup,
   updateProfile,
   check,
-} from "../controllers/usercontroller.js";
+} from "../controllers/userController.js";
 
 import { protectRoutes } from "../middleware/auth.js";
 
-const userroutes = express.Router();
+const userRouter = express.Router();
 
 // ================= NORMAL AUTH =================
 userRouter.post("/signup", signup);
@@ -44,4 +44,4 @@ userRouter.get(
   }
 );
 
-export default userroutes;
+export default userRouter;
