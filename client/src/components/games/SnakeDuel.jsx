@@ -189,9 +189,9 @@ const SnakeDuel = ({ opponent, isMultiplayer = false, onGameEnd }) => {
     return cells;
   };
 
-  return (
-    <div className="h-full flex flex-col items-center justify-center p-4 bg-[#050505]">
-      {!gameActive ? (
+  if (!gameActive) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center p-4 bg-[#050505]">
         <div className="h-full flex flex-col items-center justify-center p-8 bg-[#050505] text-center">
           <div className="max-w-md w-full space-y-8">
             <div className="relative w-24 h-24 mx-auto">
@@ -226,8 +226,12 @@ const SnakeDuel = ({ opponent, isMultiplayer = false, onGameEnd }) => {
             <p className="text-[10px] text-gray-600 uppercase font-black tracking-widest">Target Operative: {opponent?.fullName || "None Selected"}</p>
           </div>
         </div>
-      ) : (
-        <>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full flex flex-col items-center justify-center p-4 bg-[#050505]">
           {/* Score Board */}
           <div className="w-full max-w-[400px] flex justify-between items-center mb-6 bg-white/5 p-4 rounded-2xl border border-white/10 backdrop-blur-md">
               <div className={`flex flex-col items-center gap-1 ${isInviter ? "text-[var(--neon-red)]" : "text-gray-400"}`}>
@@ -278,8 +282,6 @@ const SnakeDuel = ({ opponent, isMultiplayer = false, onGameEnd }) => {
           <div className="mt-6 text-[10px] text-gray-500 uppercase font-bold tracking-[0.3em] flex items-center gap-2">
               <Skull className="w-3 h-3" /> Movement keys active
           </div>
-        </>
-      )}
     </div>
   );
 };

@@ -114,9 +114,9 @@ const TicTacToe = ({ opponent, gameStateOverride, isMultiplayer = false, onGameE
     }
   };
 
-  return (
-    <div className="h-full flex flex-col items-center justify-center p-4">
-      {!gameActive ? (
+  if (!gameActive) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center p-4">
         <div className="h-full flex flex-col items-center justify-center p-8 bg-[#050505] text-center">
           <div className="max-w-md w-full space-y-8">
             <div className="relative w-24 h-24 mx-auto">
@@ -150,45 +150,49 @@ const TicTacToe = ({ opponent, gameStateOverride, isMultiplayer = false, onGameE
             <p className="text-[10px] text-gray-600 uppercase font-black tracking-widest">Target Operative: {opponent?.fullName || "None Selected"}</p>
           </div>
         </div>
-      ) : (
-        <div className="flex flex-col items-center gap-8 w-full">
-          <div className="flex justify-between w-full max-w-sm px-4">
-            <div className={`text-center p-3 rounded-xl border ${playerSymbol === 'X' ? 'border-[var(--neon-red)] bg-[#1a0005]' : 'border-gray-800'}`}>
-              <p className="font-bold text-white tracking-widest text-xs uppercase">You ({playerSymbol})</p>
-            </div>
-            <div className={`text-center p-3 rounded-xl border ${playerSymbol === 'O' ? 'border-[var(--neon-red)] bg-[#1a0005]' : 'border-gray-800'}`}>
-              <p className="font-bold text-gray-400 tracking-widest text-xs uppercase">{opponent.fullName} ({playerSymbol === 'X' ? 'O' : 'X'})</p>
-            </div>
-          </div>
-          
-          <div className="text-center h-8">
-            {winner ? (
-              <p className="text-xl font-bold text-[var(--neon-red)] tracking-widest animate-pulse">
-                {winner === playerSymbol ? 'VICTORY SECURED' : 'CRITICAL FAILURE'}
-              </p>
-            ) : board.every(Boolean) ? (
-              <p className="text-xl font-bold text-yellow-500 tracking-widest">STALEMATE</p>
-            ) : (
-              <p className="text-sm font-bold tracking-widest text-gray-300">
-                {isMyTurn ? "YOUR MOVE" : "AWAITING OPPONENT"}
-              </p>
-            )}
-          </div>
+      </div>
+    );
+  }
 
-          <div className="grid grid-cols-3 gap-2 bg-[#121217] p-2 rounded-2xl border border-gray-800">
-            {board.map((square, i) => (
-              <button
-                key={i}
-                onClick={() => handleClick(i)}
-                className={`w-24 h-24 md:w-32 md:h-32 bg-[#0a0a0d] border border-gray-800 hover:border-gray-600 rounded-xl text-5xl flex items-center justify-center font-bold transition-colors ${square === 'X' ? 'text-[var(--neon-red)]' : 'text-white'}`}
-                disabled={!isMyTurn || winner || square}
-              >
-                {square}
-              </button>
-            ))}
+  return (
+    <div className="h-full flex flex-col items-center justify-center p-4">
+      <div className="flex flex-col items-center gap-8 w-full">
+        <div className="flex justify-between w-full max-w-sm px-4">
+          <div className={`text-center p-3 rounded-xl border ${playerSymbol === 'X' ? 'border-[var(--neon-red)] bg-[#1a0005]' : 'border-gray-800'}`}>
+            <p className="font-bold text-white tracking-widest text-xs uppercase">You ({playerSymbol})</p>
+          </div>
+          <div className={`text-center p-3 rounded-xl border ${playerSymbol === 'O' ? 'border-[var(--neon-red)] bg-[#1a0005]' : 'border-gray-800'}`}>
+            <p className="font-bold text-gray-400 tracking-widest text-xs uppercase">{opponent.fullName} ({playerSymbol === 'X' ? 'O' : 'X'})</p>
           </div>
         </div>
-      )}
+        
+        <div className="text-center h-8">
+          {winner ? (
+            <p className="text-xl font-bold text-[var(--neon-red)] tracking-widest animate-pulse">
+              {winner === playerSymbol ? 'VICTORY SECURED' : 'CRITICAL FAILURE'}
+            </p>
+          ) : board.every(Boolean) ? (
+            <p className="text-xl font-bold text-yellow-500 tracking-widest">STALEMATE</p>
+          ) : (
+            <p className="text-sm font-bold tracking-widest text-gray-300">
+              {isMyTurn ? "YOUR MOVE" : "AWAITING OPPONENT"}
+            </p>
+          )}
+        </div>
+
+        <div className="grid grid-cols-3 gap-2 bg-[#121217] p-2 rounded-2xl border border-gray-800">
+          {board.map((square, i) => (
+            <button
+              key={i}
+              onClick={() => handleClick(i)}
+              className={`w-24 h-24 md:w-32 md:h-32 bg-[#0a0a0d] border border-gray-800 hover:border-gray-600 rounded-xl text-5xl flex items-center justify-center font-bold transition-colors ${square === 'X' ? 'text-[var(--neon-red)]' : 'text-white'}`}
+              disabled={!isMyTurn || winner || square}
+            >
+              {square}
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };

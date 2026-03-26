@@ -126,9 +126,9 @@ const RockPaperScissors = ({ opponent, gameStateOverride, isMultiplayer = false,
     setResult(null);
   };
 
-  return (
-    <div className="h-full flex flex-col items-center justify-center p-4">
-      {!gameActive ? (
+  if (!gameActive) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center p-4">
         <div className="h-full flex flex-col items-center justify-center p-8 bg-[#050505] text-center">
           <div className="max-w-md w-full space-y-8">
             <div className="relative w-24 h-24 mx-auto">
@@ -162,93 +162,97 @@ const RockPaperScissors = ({ opponent, gameStateOverride, isMultiplayer = false,
             <p className="text-[10px] text-gray-600 uppercase font-black tracking-widest">Target Operative: {opponent?.fullName || "None Selected"}</p>
           </div>
         </div>
-      ) : (
-        <div className="flex flex-col items-center gap-8 w-full max-w-2xl">
-          <div className="w-full flex justify-between items-center mb-4 bg-black/40 border border-white/5 p-4 rounded-2xl backdrop-blur-md">
-            <div className="flex flex-col items-center">
-              <span className="text-[10px] text-gray-500 uppercase font-black tracking-widest">You</span>
-              <span className="text-xl font-black text-white">{score.you}</span>
-            </div>
-            <div className="flex flex-col items-center">
-              <span className="text-[8px] text-gray-600 uppercase font-bold tracking-widest">Draws</span>
-              <span className="text-sm font-bold text-gray-500">{score.draws}</span>
-            </div>
-            <div className="flex flex-col items-center">
-              <span className="text-[10px] text-gray-500 uppercase font-black tracking-widest">{opponent.fullName.split(' ')[0]}</span>
-              <span className="text-xl font-black text-white">{score.opponent}</span>
-            </div>
-            <button 
-              onClick={() => onGameEnd?.(`Series Results: You ${score.you} - ${score.opponent} ${opponent.fullName}`)}
-              className="p-2 hover:bg-red-500/20 rounded-lg text-gray-600 hover:text-red-500 transition-all ml-4"
-              title="End Mission"
-            >
-              <X className="w-5 h-5" />
-            </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full flex flex-col items-center justify-center p-4">
+      <div className="flex flex-col items-center gap-8 w-full max-w-2xl">
+        <div className="w-full flex justify-between items-center mb-4 bg-black/40 border border-white/5 p-4 rounded-2xl backdrop-blur-md">
+          <div className="flex flex-col items-center">
+            <span className="text-[10px] text-gray-500 uppercase font-black tracking-widest">You</span>
+            <span className="text-xl font-black text-white">{score.you}</span>
           </div>
-
-          <div className="h-8">
-            {result ? (
-              <p className={`text-2xl font-bold tracking-widest ${result === 'WIN' ? 'text-green-500' : result === 'LOSE' ? 'text-[var(--neon-red)]' : 'text-yellow-500'}`}>
-                {result === 'WIN' ? 'MISSION SUCCESS' : result === 'LOSE' ? 'MISSION FAILURE' : 'STALEMATE'}
-              </p>
-            ) : myChoice ? (
-              <p className="text-sm font-bold tracking-widest text-gray-300 animate-pulse uppercase">Awaiting Target Choice...</p>
-            ) : (
-              <p className="text-sm font-bold tracking-widest text-[var(--neon-red)] uppercase">Select Hand-to-Hand Weapon</p>
-            )}
+          <div className="flex flex-col items-center">
+            <span className="text-[8px] text-gray-600 uppercase font-bold tracking-widest">Draws</span>
+            <span className="text-sm font-bold text-gray-500">{score.draws}</span>
           </div>
-
-          <div className="flex justify-between w-full items-center">
-            {/* YOU */}
-            <div className="flex flex-col items-center gap-4">
-              <p className="text-xs uppercase tracking-widest text-gray-500">You</p>
-              <div className="flex flex-col gap-4">
-                {choices.map(c => (
-                  <button
-                    key={c.id}
-                    onClick={() => !myChoice && makeChoice(c.id)}
-                    disabled={!!myChoice}
-                    className={`w-20 h-20 rounded-full flex items-center justify-center border-2 transition-all ${myChoice === c.id ? "bg-[var(--neon-red)] border-[var(--neon-red)] text-black scale-110 shadow-[0_0_20px_var(--neon-red)]" : myChoice ? "opacity-30 border-gray-800 bg-[#0a0a0d] text-gray-500" : "border-gray-600 bg-[#121217] text-gray-300 hover:border-[var(--neon-red)]"}`}
-                  >
-                    <c.icon className="w-8 h-8" />
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="text-4xl text-gray-800 font-bold opacity-50 px-8">VS</div>
-
-            {/* OPPONENT */}
-            <div className="flex flex-col items-center gap-4">
-              <p className="text-xs uppercase tracking-widest text-gray-500">{opponent.fullName}</p>
-              <div className="flex flex-col gap-4">
-                {choices.map(c => {
-                  const isOpponentsChoice = result && opponentChoice === c.id;
-                  const isHidden = !result;
-                  
-                  return (
-                    <div
-                      key={`opp-${c.id}`}
-                      className={`w-20 h-20 rounded-full flex items-center justify-center border-2 transition-all ${isOpponentsChoice ? "bg-white border-white text-black scale-110 shadow-[0_0_20px_rgba(255,255,255,0.5)]" : "border-gray-800 bg-[#0a0a0d] text-gray-700 opacity-50"}`}
-                    >
-                      {isHidden ? <div className="text-xl">?</div> : <c.icon className="w-8 h-8" />}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+          <div className="flex flex-col items-center">
+            <span className="text-[10px] text-gray-500 uppercase font-black tracking-widest">{opponent.fullName.split(' ')[0]}</span>
+            <span className="text-xl font-black text-white">{score.opponent}</span>
           </div>
+          <button 
+            onClick={() => onGameEnd?.(`Series Results: You ${score.you} - ${score.opponent} ${opponent.fullName}`)}
+            className="p-2 hover:bg-red-500/20 rounded-lg text-gray-600 hover:text-red-500 transition-all ml-4"
+            title="End Mission"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
 
-          {result && (
-            <button 
-              onClick={resetGame}
-              className="mt-8 border border-[var(--neon-red)] text-[var(--neon-red)] px-8 py-3 rounded-full text-xs font-bold tracking-widest hover:bg-[var(--neon-red)] hover:text-white transition-all shadow-[0_0_15px_rgba(255,0,60,0.1)] hover:shadow-[0_0_20px_rgba(255,0,60,0.4)]"
-            >
-              NEXT ROUND
-            </button>
+        <div className="h-8">
+          {result ? (
+            <p className={`text-2xl font-bold tracking-widest ${result === 'WIN' ? 'text-green-500' : result === 'LOSE' ? 'text-[var(--neon-red)]' : 'text-yellow-500'}`}>
+              {result === 'WIN' ? 'MISSION SUCCESS' : result === 'LOSE' ? 'MISSION FAILURE' : 'STALEMATE'}
+            </p>
+          ) : myChoice ? (
+            <p className="text-sm font-bold tracking-widest text-gray-300 animate-pulse uppercase">Awaiting Target Choice...</p>
+          ) : (
+            <p className="text-sm font-bold tracking-widest text-[var(--neon-red)] uppercase">Select Hand-to-Hand Weapon</p>
           )}
         </div>
-      )}
+
+        <div className="flex justify-between w-full items-center">
+          {/* YOU */}
+          <div className="flex flex-col items-center gap-4">
+            <p className="text-xs uppercase tracking-widest text-gray-500">You</p>
+            <div className="flex flex-col gap-4">
+              {choices.map(c => (
+                <button
+                  key={c.id}
+                  onClick={() => !myChoice && makeChoice(c.id)}
+                  disabled={!!myChoice}
+                  className={`w-20 h-20 rounded-full flex items-center justify-center border-2 transition-all ${myChoice === c.id ? "bg-[var(--neon-red)] border-[var(--neon-red)] text-black scale-110 shadow-[0_0_20px_var(--neon-red)]" : myChoice ? "opacity-30 border-gray-800 bg-[#0a0a0d] text-gray-500" : "border-gray-600 bg-[#121217] text-gray-300 hover:border-[var(--neon-red)]"}`}
+                >
+                  <c.icon className="w-8 h-8" />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="text-4xl text-gray-800 font-bold opacity-50 px-8">VS</div>
+
+          {/* OPPONENT */}
+          <div className="flex flex-col items-center gap-4">
+            <p className="text-xs uppercase tracking-widest text-gray-500">{opponent.fullName}</p>
+            <div className="flex flex-col gap-4">
+              {choices.map(c => {
+                const isOpponentsChoice = result && opponentChoice === c.id;
+                const isHidden = !result;
+                
+                return (
+                  <div
+                    key={`opp-${c.id}`}
+                    className={`w-20 h-20 rounded-full flex items-center justify-center border-2 transition-all ${isOpponentsChoice ? "bg-white border-white text-black scale-110 shadow-[0_0_20px_rgba(255,255,255,0.5)]" : "border-gray-800 bg-[#0a0a0d] text-gray-700 opacity-50"}`}
+                  >
+                    {isHidden ? <div className="text-xl">?</div> : <c.icon className="w-8 h-8" />}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {result && (
+          <button 
+            onClick={resetGame}
+            className="mt-8 border border-[var(--neon-red)] text-[var(--neon-red)] px-8 py-3 rounded-full text-xs font-bold tracking-widest hover:bg-[var(--neon-red)] hover:text-white transition-all shadow-[0_0_15px_rgba(255,0,60,0.1)] hover:shadow-[0_0_20px_rgba(255,0,60,0.4)]"
+          >
+            NEXT ROUND
+          </button>
+        )}
+      </div>
     </div>
   );
 };
