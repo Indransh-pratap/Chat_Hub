@@ -38,7 +38,7 @@ const QUESTIONS = {
 };
 
 const TruthAndDare = ({ opponent, isMultiplayer = false, onGameEnd }) => {
-  const { socket, authUser } = useContext(AuthContext);
+  const { socket, authUser, axios: api } = useContext(AuthContext);
   const { users } = useContext(ChatContext);
   const { activeGame } = useUIStore();
   const roomId = activeGame?.roomId;
@@ -115,7 +115,7 @@ const TruthAndDare = ({ opponent, isMultiplayer = false, onGameEnd }) => {
           const toastId = toast.loading(`Transmitting ${isVideo ? 'Video' : 'Image'} evidence...`);
 
           try {
-              const res = await axios.post(`/api/messages/send/${opponent._id}`, {
+              const res = await api.post(`/api/messages/send/${opponent._id}`, {
                   [isVideo ? 'video' : 'image']: base64,
                   text: `[Tactical Media Transmission]`,
                   type: isVideo ? 'video' : 'video'

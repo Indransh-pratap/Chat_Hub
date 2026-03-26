@@ -5,6 +5,7 @@ import http from "http";
 import { connectDB } from "./lib/db.js";
 import userRouter from "./routes/Userroutes.js";
 import messageRouter from "./routes/messageRoutes.js";
+import gameRouter from "./routes/gameRoutes.js";
 import { Server } from "socket.io";
 import passport from "./lib/passport.js";
 import { handleGameEvents } from "./socket/gameHandlers.js";
@@ -113,6 +114,7 @@ app.get("/api/status", (req, res) => res.send("Server is Live"));
 
 app.use("/api/auth", userRouter);
 app.use("/api/messages", messageRouter);
+app.use("/api/games", gameRouter);
 
 // ✅ DB
 await connectDB();

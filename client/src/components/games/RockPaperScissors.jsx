@@ -3,7 +3,7 @@ import { AuthContext } from "../../../context/AuthContext";
 import { ChatContext } from "../../../context/ChatContext";
 import toast from "react-hot-toast";
 import { useUIStore } from "../../lib/uiStore";
-import { Hand, Scissors, Circle, Swords, Zap } from "lucide-react"; // Fallbacks for Rock, Paper, Scissors
+import { Hand, Scissors, Circle, Swords, Zap, X } from "lucide-react"; // Fallbacks for Rock, Paper, Scissors
 
 const choices = [
   { id: 'rock', name: 'Rock', icon: Circle },
@@ -12,12 +12,13 @@ const choices = [
 ];
 
 const RockPaperScissors = ({ opponent, gameStateOverride, isMultiplayer = false, onGameEnd }) => {
-  const { socket, authUser } = useContext(AuthContext);
+  const { socket, authUser, axios: api } = useContext(AuthContext);
   const { sendMessage } = useContext(ChatContext);
   const [gameActive, setGameActive] = useState(isMultiplayer);
   const [myChoice, setMyChoice] = useState(null);
   const [opponentChoice, setOpponentChoice] = useState(null);
   const [result, setResult] = useState(null);
+  const [score, setScore] = useState({ you: 0, opponent: 0, draws: 0 });
 
   const { activeGame } = useUIStore();
   const roomId = activeGame?.roomId;
@@ -56,33 +57,44 @@ const RockPaperScissors = ({ opponent, gameStateOverride, isMultiplayer = false,
     }
   }, [myChoice, opponentChoice]);
 
-  const determineWinner = (mine, theirs) => {
+  const determineWinner = async (mine, theirs) => {
     let res = "";
-    if (mine === theirs) res = "DRAW";
-    else if (
+    if (mine === theirs) {
+      res = "DRAW";
+      setScore(s => ({ ...s, draws: s.draws + 1 }));
+    } else if (
         (mine === 'rock' && theirs === 'scissors') ||
         (mine === 'paper' && theirs === 'rock') ||
         (mine === 'scissors' && theirs === 'paper')
     ) {
         res = "WIN";
+        setScore(s => ({ ...s, you: s.you + 1 }));
     } else {
         res = "LOSE";
+        setScore(s => ({ ...s, opponent: s.opponent + 1 }));
     }
     setResult(res);
 
-    if (onGameEnd) {
-      const outcome = res === "WIN" ? "Victory" : res === "LOSE" ? "Defeat" : "Stalemate";
-      const resultMsg = `${outcome} in Rock Paper Scissors against ${opponent.fullName}`;
-      
-      // Emit end event so opponent sees our choice if we were the last to move
-      socket.emit("game:end", {
-          roomId,
-          game: "rps",
-          opponentChoice: mine
-      });
-
-      setTimeout(() => onGameEnd(resultMsg), 3000);
+    // Persist to MongoDB
+    try {
+        await api.post("/api/games/save", {
+            gameId: "rps",
+            roomId,
+            players: [authUser._id, opponent._id],
+            winnerId: res === "WIN" ? authUser._id : res === "LOSE" ? opponent._id : null,
+            result: res.toLowerCase(),
+            details: { myChoice: mine, opponentChoice: theirs }
+        });
+    } catch (error) {
+        console.error("Failed to archive round:", error);
     }
+
+    // Inform opponent of our final choice if we were the last to move
+    socket.emit("game:end", {
+        roomId,
+        game: "rps",
+        opponentChoice: mine
+    });
   };
 
   const invitePlayer = async () => {
@@ -152,15 +164,37 @@ const RockPaperScissors = ({ opponent, gameStateOverride, isMultiplayer = false,
         </div>
       ) : (
         <div className="flex flex-col items-center gap-8 w-full max-w-2xl">
+          <div className="w-full flex justify-between items-center mb-4 bg-black/40 border border-white/5 p-4 rounded-2xl backdrop-blur-md">
+            <div className="flex flex-col items-center">
+              <span className="text-[10px] text-gray-500 uppercase font-black tracking-widest">You</span>
+              <span className="text-xl font-black text-white">{score.you}</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <span className="text-[8px] text-gray-600 uppercase font-bold tracking-widest">Draws</span>
+              <span className="text-sm font-bold text-gray-500">{score.draws}</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <span className="text-[10px] text-gray-500 uppercase font-black tracking-widest">{opponent.fullName.split(' ')[0]}</span>
+              <span className="text-xl font-black text-white">{score.opponent}</span>
+            </div>
+            <button 
+              onClick={() => onGameEnd?.(`Series Results: You ${score.you} - ${score.opponent} ${opponent.fullName}`)}
+              className="p-2 hover:bg-red-500/20 rounded-lg text-gray-600 hover:text-red-500 transition-all ml-4"
+              title="End Mission"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
           <div className="h-8">
             {result ? (
               <p className={`text-2xl font-bold tracking-widest ${result === 'WIN' ? 'text-green-500' : result === 'LOSE' ? 'text-[var(--neon-red)]' : 'text-yellow-500'}`}>
-                {result === 'WIN' ? 'VICTORY' : result === 'LOSE' ? 'DEFEAT' : 'STALEMATE'}
+                {result === 'WIN' ? 'MISSION SUCCESS' : result === 'LOSE' ? 'MISSION FAILURE' : 'STALEMATE'}
               </p>
             ) : myChoice ? (
-              <p className="text-sm font-bold tracking-widest text-gray-300 animate-pulse">AWAITING OPPONENT...</p>
+              <p className="text-sm font-bold tracking-widest text-gray-300 animate-pulse uppercase">Awaiting Target Choice...</p>
             ) : (
-              <p className="text-sm font-bold tracking-widest text-[var(--neon-red)]">SELECT WEAPON</p>
+              <p className="text-sm font-bold tracking-widest text-[var(--neon-red)] uppercase">Select Hand-to-Hand Weapon</p>
             )}
           </div>
 
