@@ -99,4 +99,12 @@ export const handleGameEvents = (socket, userId) => {
       activeGames.delete(roomId);
     }
   });
+
+  // ✅ GAME CHAT (In-game messaging)
+  socket.on("game:chat", (data) => {
+    const { roomId, message } = data;
+    if (io && roomId) {
+      io.to(roomId).emit("game:chat", message);
+    }
+  });
 };

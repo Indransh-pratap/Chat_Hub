@@ -55,8 +55,18 @@ const TruthAndDare = ({ opponent, isMultiplayer = false, onGameEnd }) => {
     if (isMultiplayer && activeGame) {
       setGameActive(true);
       setCurrentTurnId(activeGame.role === "inviter" ? authUser._id : opponent._id);
+      
+      // Initialize chat with system message (only sender once)
+      if (activeGame.role === "inviter" && socket && roomId && gameMessages.length === 0) {
+          const initMsg = {
+              id: `init-${Date.now()}`,
+              isSystem: true,
+              text: `MISSION PROTOCOL: ${activeGame.gameId.toUpperCase()} INITIALIZED`,
+          };
+          socket.emit("game:chat", { roomId, message: initMsg });
+      }
     }
-  }, [isMultiplayer, activeGame, authUser._id, opponent._id]);
+  }, [isMultiplayer, activeGame, authUser._id, opponent._id, socket, roomId]);
 
   useEffect(() => {
     if (!socket || !roomId) return;
@@ -92,6 +102,10 @@ const TruthAndDare = ({ opponent, isMultiplayer = false, onGameEnd }) => {
   const sendGameMessage = (e) => {
     e?.preventDefault();
     if (!chatInput.trim()) return;
+    if (!roomId) {
+        toast.error("Tactical Comms offline: Room not found.");
+        return;
+    }
 
     const msg = {
         id: Date.now(),

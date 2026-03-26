@@ -114,8 +114,6 @@ const RockPaperScissors = ({ opponent, gameStateOverride, isMultiplayer = false,
     setResult(null);
   };
 
-  return (
-    <div className="h-full flex flex-col items-center justify-center p-4">
   if (!gameActive) {
     return (
       <div className="h-full flex flex-col items-center justify-center p-8 bg-[#050505] text-center">
@@ -153,7 +151,11 @@ const RockPaperScissors = ({ opponent, gameStateOverride, isMultiplayer = false,
       </div>
     );
   }
+
+  return (
+    <div className="h-full flex flex-col items-center justify-center p-4">
         <div className="flex flex-col items-center gap-8 w-full max-w-2xl">
+
           
           <div className="h-8">
             {result ? (
@@ -218,7 +220,6 @@ const RockPaperScissors = ({ opponent, gameStateOverride, isMultiplayer = false,
           )}
 
         </div>
-      )}
     </div>
   );
 };

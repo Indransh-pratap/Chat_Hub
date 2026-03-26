@@ -3,6 +3,7 @@ import { AuthContext } from "../../../context/AuthContext";
 import { ChatContext } from "../../../context/ChatContext";
 import toast from "react-hot-toast";
 import { useUIStore } from "../../lib/uiStore";
+import { Target, Zap } from "lucide-react";
 
 const TicTacToe = ({ opponent, gameStateOverride, isMultiplayer = false, onGameEnd }) => {
   const { socket, authUser } = useContext(AuthContext);
@@ -113,8 +114,6 @@ const TicTacToe = ({ opponent, gameStateOverride, isMultiplayer = false, onGameE
     }
   };
 
-  return (
-    <div className="h-full flex flex-col items-center justify-center p-4">
   if (!gameActive) {
     return (
       <div className="h-full flex flex-col items-center justify-center p-8 bg-[#050505] text-center">
@@ -152,7 +151,11 @@ const TicTacToe = ({ opponent, gameStateOverride, isMultiplayer = false, onGameE
       </div>
     );
   }
+
+  return (
+    <div className="h-full flex flex-col items-center justify-center p-4">
         <div className="flex flex-col items-center gap-8 w-full">
+
           <div className="flex justify-between w-full max-w-sm px-4">
             <div className={`text-center p-3 rounded-xl border ${playerSymbol === 'X' ? 'border-[var(--neon-red)] bg-[#1a0005]' : 'border-gray-800'}`}>
               <p className="font-bold text-white tracking-widest text-xs uppercase">You ({playerSymbol})</p>
@@ -189,7 +192,6 @@ const TicTacToe = ({ opponent, gameStateOverride, isMultiplayer = false, onGameE
             ))}
           </div>
         </div>
-      )}
     </div>
   );
 };
