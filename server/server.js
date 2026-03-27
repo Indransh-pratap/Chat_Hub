@@ -18,7 +18,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://realtime-chat-app-rho-flax.vercel.app",
+      "https://chat-hub-lime.vercel.app",
     ],
     credentials: true,
   })
