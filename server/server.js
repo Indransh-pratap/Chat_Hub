@@ -8,7 +8,7 @@ import messageRouter from "./routes/messageroutes.js";
 import gameRouter from "./routes/gameroutes.js";
 import { Server } from "socket.io";
 import passport from "./lib/passport.js";
-import { handleGameEvents } from "./socket/gameHandlers.js";
+import { handleGameEvents } from "./socket/gamehandlers.js";
 
 const app = express();
 const server = http.createServer(app);
