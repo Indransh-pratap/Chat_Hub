@@ -40,6 +40,7 @@ export const io = new Server(server, {
     ],
     credentials: true,
   },
+   transports: ["websocket"], 
 });
 
 export const userSocketMap = {};
